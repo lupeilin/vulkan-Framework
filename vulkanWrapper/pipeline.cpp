@@ -86,9 +86,9 @@ namespace FF::Wrapper {
 			vkDestroyPipeline(mDevice->getDevice(), mPipeline, nullptr);
 		}
 		//pipeline chache ，可以将相关数据存入缓存，在多个pipeline当中使用，也可以存到文件，不同程序调用
-		if (vkCreateGraphicsPipelines(mDevice->getDevice(), VK_NULL_HANDLE, 1 ,&pipelineCreateInfo, nullptr, &mPipeline) != VK_SUCCESS) {
+		/*if (vkCreateGraphicsPipelines(mDevice->getDevice(), VK_NULL_HANDLE, 1 ,&pipelineCreateInfo, nullptr, &mPipeline) != VK_SUCCESS) {
 			throw std::runtime_error("Error : failed to create pipeline");
-		}
+		}*/
 	}
 
 }
