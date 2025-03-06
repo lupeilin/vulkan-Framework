@@ -1,0 +1,48 @@
+#pragma once
+
+#include "../base.h"
+#include "device.h"
+#include "shader.h"
+namespace FF::Wrapper {
+	class Pipeline
+	{
+	public:
+		using Ptr = std::shared_ptr<Pipeline>;
+		static Ptr create(const Device::Ptr& device) { return std::make_shared<Pipeline>(device); }
+
+		Pipeline(const Device::Ptr &device);
+		~Pipeline();
+
+		void setShaderGroup(std::vector<Shader::Ptr> &shaderGroup);
+
+		void setViewPorts(const std::vector<VkViewport>& viewports) { mViewports = viewports; }
+		void setScissors(const std::vector <VkRect2D>& scissors) { mScissors = scissors; }
+
+		void pushBlendAttachment(const VkPipelineColorBlendAttachmentState& blendAttachment) { mBlendAttachmentStates.push_back(blendAttachment); }
+
+		void build();
+
+	public:
+		VkPipelineVertexInputStateCreateInfo mVertexInputStage{};
+		VkPipelineInputAssemblyStateCreateInfo mAssemblyState{};
+		VkPipelineViewportStateCreateInfo mViewortState{};
+		VkPipelineRasterizationStateCreateInfo mRasterstate{};
+		VkPipelineMultisampleStateCreateInfo mSampleState{};
+		std::vector<VkPipelineColorBlendAttachmentState> mBlendAttachmentStates{};
+		VkPipelineColorBlendStateCreateInfo mBlendState{};
+		VkPipelineDepthStencilStateCreateInfo mDepthStencilState{};
+		VkPipelineLayoutCreateInfo mLayoutState{};
+
+		//TODO£ºneeds  render pass and subpass
+
+	private:
+		VkPipeline mPipeline{ VK_NULL_HANDLE };
+		VkPipelineLayout mLayout{ VK_NULL_HANDLE };
+		Device::Ptr mDevice{ nullptr };
+
+		std::vector<Shader::Ptr> mShaders{};
+		std::vector<VkViewport> mViewports{};
+		std::vector<VkRect2D> mScissors{};
+	};
+
+}
