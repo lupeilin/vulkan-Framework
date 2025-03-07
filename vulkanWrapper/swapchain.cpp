@@ -18,25 +18,65 @@ namespace FF::Wrapper {
 		VkExtent2D extent = chooseExtent(swapChainSupportInfo.mCapabilities);
 
 		//设置图像缓冲数量
-		uint32_t imageCount = swapChainSupportInfo.mCapabilities.minImageCount + 1; 
+		mImageCount = swapChainSupportInfo.mCapabilities.minImageCount + 1;
 
 		//如果maxImageCount为0，说明只要内存不爆炸，我们可以设定任意数量的images
-		if (swapChainSupportInfo.mCapabilities.maxImageCount > 0 && imageCount > swapChainSupportInfo.mCapabilities.maxImageCount) {
-			imageCount = swapChainSupportInfo.mCapabilities.maxImageCount;
+		if (swapChainSupportInfo.mCapabilities.maxImageCount > 0 && mImageCount > swapChainSupportInfo.mCapabilities.maxImageCount) {
+			mImageCount = swapChainSupportInfo.mCapabilities.maxImageCount;
 		}
 
 		//填写创建信息，此处初始化必须置空，因为会有忘记设置的变量，值为随机
 		VkSwapchainCreateInfoKHR createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 		createInfo.surface = mSurface->getSurface();
-		createInfo.minImageCount = imageCount; // 我现在设置的数量，适合当前的情况，但可能会得到更多
+		createInfo.minImageCount = mImageCount; // 我现在设置的数量，适合当前的情况，但可能会得到更多
 		createInfo.imageFormat = surefaceFormat.format;
 		createInfo.imageColorSpace = surefaceFormat.colorSpace;
 		createInfo.imageExtent = extent;
 
-		//图像包含的层次
+		//图像包含的层次,VR一般会有两个
+		createInfo.imageArrayLayers = 1;
 
-		//
+		//交换链生成的图像，到底用于何处
+		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+		//因为交换链的图像，会被用来渲染或者显示，而渲染跟显示分别使用不同的队列，所以会出现两个队列使用同一个交换链的情况
+		//那么我们就需要设置，让交换链的图像，被两个队列使用兼容
+		std::vector<uint32_t> queueFamilies = { mDevice->getGraphicQueueFamily().value() , mDevice->getPresentQueueFamily().value()};
+		if (mDevice->getGraphicQueueFamily().value() == mDevice->getPresentQueueFamily().value()) {
+			createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE; //专有模式，被某一个队列簇独占，性能会更好
+			createInfo.queueFamilyIndexCount = 0;
+			createInfo.pQueueFamilyIndices = nullptr;
+		}
+		else {
+			createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT; //可以被共享的模式
+			createInfo.queueFamilyIndexCount = static_cast<uint32_t>(queueFamilies.size());
+			createInfo.pQueueFamilyIndices = queueFamilies.data();
+		}
+
+		//交换链的图像初始变化，比如是否需要反转
+		createInfo.preTransform = swapChainSupportInfo.mCapabilities.currentTransform;
+
+		//不予原来窗体当中的内容混合
+		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+
+		createInfo.presentMode = presentMode;
+
+		//当前窗体被挡住的部分不用绘制,但是会影响到回读
+		createInfo.clipped = VK_TRUE;
+
+		if (vkCreateSwapchainKHR(mDevice->getDevice(), &createInfo, nullptr, &mSwapChain) != VK_SUCCESS) {
+			throw std::runtime_error("Error : failed to reate swap chain");
+		}
+
+		mSwapChainFormat = surefaceFormat.format;
+		mSwapChainExtent = extent;
+
+		//系统可能创建更多的image ，当前的imageCount是最小数量
+		vkGetSwapchainImagesKHR(mDevice->getDevice(), mSwapChain, &mImageCount, nullptr);
+		mSwapChianImages.resize(mImageCount);
+		vkGetSwapchainImagesKHR(mDevice->getDevice(), mSwapChain, &mImageCount, mSwapChianImages.data());
+
 
 
 	}
@@ -118,5 +158,18 @@ namespace FF::Wrapper {
 		actualExtent.height = std::max(std::min(capabilities.maxImageExtent.height, actualExtent.height), capabilities.minImageExtent.height);
 		
 		return actualExtent;
+	}
+
+	VkImageView SwapChain::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels = 1) {
+		VkImageViewCreateInfo createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		createInfo.image = image;
+		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		createInfo.format = format;
+
+		createInfo.subresourceRange.aspectMask = aspectFlags;
+		createInfo.subresourceRange.baseMipLevel = 0;
+		createInfo.subresourceRange.levelCount = mipLevels;
+		createInfo.subresourceRange.baseArrayLayer
 	}
 }

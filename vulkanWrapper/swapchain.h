@@ -29,12 +29,15 @@ namespace FF::Wrapper {
 
 	public:
 		//[[nodiscard]] 
+
+	private:
+		VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels = 1);
 	private:
 		VkSwapchainKHR mSwapChain{ VK_NULL_HANDLE };
 
 		VkFormat mSwapChainFormat;
 		VkExtent2D mSwapChainExtent;
-
+		uint32_t mImageCount{ 0 };
 		//VkImage由swapchanin创建，销毁也要交给swapchanin
 		std::vector<VkImage> mSwapChianImages{};
 		//对图像的管理器、管理框架
