@@ -30,6 +30,7 @@ namespace FF {
 
 	private:
 		void createPipeline();
+		void createRenderPass();
 	private:
 		Wrapper::Window::Ptr mWindow{ nullptr };
 		Wrapper::Instance::Ptr mInstance{ nullptr };
@@ -37,5 +38,6 @@ namespace FF {
 		Wrapper::WindowSurface::Ptr mSurface{ nullptr };
 		Wrapper::SwapChain::Ptr mSwapChain{ nullptr };
 		Wrapper::Pipeline::Ptr mPipeline{ nullptr };
+		Wrapper::RenderPass::Ptr mRenderPass{ nullptr };
 	};
 }

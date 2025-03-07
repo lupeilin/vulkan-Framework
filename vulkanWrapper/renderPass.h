@@ -16,23 +16,52 @@ namespace FF::Wrapper {
 	class SubPass
 	{
 	public:
+
 		SubPass();
 		~SubPass();
 
-	private:
-		VkSubpassDescription mSubpass{};
-		std::vector<VkAttachmentReference> mColorAttachmentRefrence{};
+		void addColorAttachmentRefrence(const VkAttachmentReference& ref);
 
+		void addInputAttachmentRefrence(const VkAttachmentReference& ref);
+
+		void addDepthStencilAttachmentRefrence(const VkAttachmentReference& ref);
+
+		void buildSubpassDescription();
+
+		[[nodiscard]] auto getSubPassDescription() const { return mSubPassDescription; }
+
+	private:
+		VkSubpassDescription mSubPassDescription{};
+		std::vector<VkAttachmentReference> mColorAttachmentRefrences{};
+		std::vector<VkAttachmentReference> mInputAttachmentRefrences{};
+		VkAttachmentReference mDepthStencilAttachmentRefrence{};
 	};
 
 	class RenderPass
 	{
 	public:
 		using Ptr = std::shared_ptr<RenderPass>;
-		RenderPass();
+
+		static Ptr create(const Device::Ptr& device) { return std::make_shared<RenderPass>(device); }
+
+		RenderPass(const Device::Ptr &device);
 		~RenderPass();
 
-	private:
+		void addSubPass(const SubPass& subpass);
 
+		void addDependency(const VkSubpassDependency& dependency);
+
+		void addAttchment(const VkAttachmentDescription& attachmentDes);
+
+		void buildRenderPass();
+
+	private:
+		VkRenderPass mRenderPass{ VK_NULL_HANDLE };
+
+		std::vector<SubPass> mSubPasses{};
+		std::vector<VkSubpassDependency> mDependencies{};
+		std::vector <VkAttachmentDescription> mAttachmentDescriptions{};
+
+		Device::Ptr mDevice{ nullptr };
 	};
 }

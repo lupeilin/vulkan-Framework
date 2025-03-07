@@ -7,6 +7,38 @@ namespace FF::Wrapper {
 		mSurface = surface;
 
 		auto swapChainSupportInfo = querySwapChainSupportInfo();
+
+		//选择vkformat
+		VkSurfaceFormatKHR surefaceFormat = chooseSurfaceFormat(swapChainSupportInfo.mFormats);
+
+		//选择presentMode
+		VkPresentModeKHR presentMode = chooseSurfacePresentMode(swapChainSupportInfo.mPresentModes);
+		
+		//选择交换链范围
+		VkExtent2D extent = chooseExtent(swapChainSupportInfo.mCapabilities);
+
+		//设置图像缓冲数量
+		uint32_t imageCount = swapChainSupportInfo.mCapabilities.minImageCount + 1; 
+
+		//如果maxImageCount为0，说明只要内存不爆炸，我们可以设定任意数量的images
+		if (swapChainSupportInfo.mCapabilities.maxImageCount > 0 && imageCount > swapChainSupportInfo.mCapabilities.maxImageCount) {
+			imageCount = swapChainSupportInfo.mCapabilities.maxImageCount;
+		}
+
+		//填写创建信息，此处初始化必须置空，因为会有忘记设置的变量，值为随机
+		VkSwapchainCreateInfoKHR createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+		createInfo.surface = mSurface->getSurface();
+		createInfo.minImageCount = imageCount; // 我现在设置的数量，适合当前的情况，但可能会得到更多
+		createInfo.imageFormat = surefaceFormat.format;
+		createInfo.imageColorSpace = surefaceFormat.colorSpace;
+		createInfo.imageExtent = extent;
+
+		//图像包含的层次
+
+		//
+
+
 	}
 
 	SwapChain::~SwapChain() {

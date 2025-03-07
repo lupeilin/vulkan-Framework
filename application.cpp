@@ -19,7 +19,7 @@ namespace FF {
 		mDevice = Wrapper::Device::create(mInstance, mSurface);
 		mSwapChain = Wrapper::SwapChain::create(mDevice, mWindow, mSurface);
 
-		// 
+		mRenderPass = Wrapper::RenderPass::create(mDevice);
 
 		mPipeline = Wrapper::Pipeline::create(mDevice);
 		
@@ -123,6 +123,12 @@ namespace FF {
 
 		mPipeline->build();
 	}
+
+	void Application::createRenderPass() {
+		VkAttachmentDescription attachmentDes{};
+		attachmentDes.format =   
+	}
+
 	void Application::mainLoop() {
 		while (!mWindow->shouldClose()){
 			mWindow->pollEvents();
