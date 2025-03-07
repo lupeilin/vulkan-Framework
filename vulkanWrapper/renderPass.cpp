@@ -32,7 +32,7 @@ namespace FF::Wrapper {
 		mSubPassDescription.inputAttachmentCount = static_cast<uint32_t>(mInputAttachmentRefrences.size());
 		mSubPassDescription.pInputAttachments = mInputAttachmentRefrences.data();
 
-		mSubPassDescription.pDepthStencilAttachment = &mDepthStencilAttachmentRefrence;
+		mSubPassDescription.pDepthStencilAttachment = mDepthStencilAttachmentRefrence.layout == VK_IMAGE_LAYOUT_UNDEFINED ? nullptr : &mDepthStencilAttachmentRefrence;
 	}
 
 	RenderPass::RenderPass(const Device::Ptr& device) {

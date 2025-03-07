@@ -77,11 +77,44 @@ namespace FF::Wrapper {
 		mSwapChianImages.resize(mImageCount);
 		vkGetSwapchainImagesKHR(mDevice->getDevice(), mSwapChain, &mImageCount, mSwapChianImages.data());
 
-
+		//创建imageView
+		mSwapChainImageViews.resize(mImageCount);
+		for (int i = 0; i < mImageCount; ++i) {
+			mSwapChainImageViews[i] = createImageView(mSwapChianImages[i], mSwapChainFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+		}
 
 	}
+	void SwapChain::createFrameBuffers(RenderPass::Ptr& renderPass) {
+		//创建Framebuffer
+		mSwapChainFrameBuffers.resize(mImageCount);
+		for (int i = 0; i < mImageCount; i++) {
+			//frameBuffer  里面有一帧的数据，比如有n个不同的ColorAttachment 一个DepthStencilAttachment， 
+			//这些东西的集合为一个frameBuffer，送入管线，就会线程一个gpu的集合，这个集合由上方的attachment构成
+			std::array<VkImageView, 1> attachments = { mSwapChainImageViews[i] };
 
+			VkFramebufferCreateInfo frameBufferCreateInfo{};
+			frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+			frameBufferCreateInfo.renderPass = renderPass->getRenderPass();
+			frameBufferCreateInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+			frameBufferCreateInfo.pAttachments = attachments.data();
+			frameBufferCreateInfo.width = mSwapChainExtent.width;
+			frameBufferCreateInfo.height = mSwapChainExtent.height;
+			frameBufferCreateInfo.layers = 1;
+
+			if (vkCreateFramebuffer(mDevice->getDevice(), &frameBufferCreateInfo, nullptr, &mSwapChainFrameBuffers[i]) != VK_SUCCESS) {
+				throw std::runtime_error("Error : failed to create frame buffer");
+			}
+		}
+	}
 	SwapChain::~SwapChain() {
+		for (auto& imageView : mSwapChainImageViews) {
+			vkDestroyImageView(mDevice->getDevice(), imageView, nullptr);
+		}
+
+		for (auto& frameBuffer : mSwapChainFrameBuffers) {
+			vkDestroyFramebuffer(mDevice->getDevice(), frameBuffer, nullptr);
+		}
+
 		if (mSwapChain != VK_NULL_HANDLE) {
 			vkDestroySwapchainKHR(mDevice->getDevice(), mSwapChain, nullptr);
 		}
@@ -160,16 +193,24 @@ namespace FF::Wrapper {
 		return actualExtent;
 	}
 
-	VkImageView SwapChain::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels = 1) {
+	VkImageView SwapChain::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels) {
 		VkImageViewCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		createInfo.image = image;
 		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		createInfo.format = format;
-
+		 
 		createInfo.subresourceRange.aspectMask = aspectFlags;
 		createInfo.subresourceRange.baseMipLevel = 0;
 		createInfo.subresourceRange.levelCount = mipLevels;
-		createInfo.subresourceRange.baseArrayLayer
+		createInfo.subresourceRange.baseArrayLayer = 0;
+		createInfo.subresourceRange.layerCount = 1;
+
+		VkImageView imageView{ VK_NULL_HANDLE };
+		if (vkCreateImageView(mDevice->getDevice(), &createInfo, nullptr, &imageView) != VK_SUCCESS) {
+			throw std::runtime_error("Error: failed to create image view in swapchain");
+		}
+
+		return imageView;
 	}
 }

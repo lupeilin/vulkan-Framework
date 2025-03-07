@@ -2,13 +2,14 @@
 
 namespace FF::Wrapper {
 
-	Pipeline::Pipeline(const Device::Ptr& device) {
+	Pipeline::Pipeline(const Device::Ptr& device, const RenderPass::Ptr& renderPass) {
 		mDevice = device;
+		mRenderPass = renderPass;
 
 		mVertexInputStage.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 		mAssemblyState.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 		mViewortState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-		mRasterstate.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+		mRasterstate.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 		mSampleState.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 		mBlendState.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 		mDepthStencilState.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
@@ -36,7 +37,7 @@ namespace FF::Wrapper {
 			VkPipelineShaderStageCreateInfo shaderCreateInfo{};
 			shaderCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 			shaderCreateInfo.stage = shader->getShaderStage();
-			shaderCreateInfo.pName = shader->getShaderEntruPoint().c_str();
+			shaderCreateInfo.pName = shader->getShaderEntryPoint().c_str();
 			shaderCreateInfo.module = shader->getShaderModule();
 
 			shaderCreateInfos.push_back(shaderCreateInfo);
@@ -74,8 +75,8 @@ namespace FF::Wrapper {
 		pipelineCreateInfo.pDepthStencilState = nullptr; //TODO
 		pipelineCreateInfo.pColorBlendState = &mBlendState;
 		pipelineCreateInfo.layout = mLayout;
-		pipelineCreateInfo.renderPass = VK_NULL_HANDLE; // TODO: add render pass
-		pipelineCreateInfo.subpass = 0;
+		pipelineCreateInfo.renderPass = mRenderPass->getRenderPass() ; // TODO: add render pass
+		pipelineCreateInfo.subpass = 0; //这个pipeline是用于前一行这个renderpass的第0号subpass来渲染的
 
 		//以存在的pipeline为基础进行创建，会更快，但是需要指定flags为 VK_PIPELINE_CREATE_DERIVATIVE_BIT
 		pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
@@ -86,9 +87,9 @@ namespace FF::Wrapper {
 			vkDestroyPipeline(mDevice->getDevice(), mPipeline, nullptr);
 		}
 		//pipeline chache ，可以将相关数据存入缓存，在多个pipeline当中使用，也可以存到文件，不同程序调用
-		/*if (vkCreateGraphicsPipelines(mDevice->getDevice(), VK_NULL_HANDLE, 1 ,&pipelineCreateInfo, nullptr, &mPipeline) != VK_SUCCESS) {
+		if (vkCreateGraphicsPipelines(mDevice->getDevice(), VK_NULL_HANDLE, 1 ,&pipelineCreateInfo, nullptr, &mPipeline) != VK_SUCCESS) {
 			throw std::runtime_error("Error : failed to create pipeline");
-		}*/
+		}
 	}
 
 }

@@ -55,6 +55,9 @@ namespace FF::Wrapper {
 
 		void buildRenderPass();
 
+	public:
+		[[nodiscard]] auto getRenderPass() const { return mRenderPass; }
+
 	private:
 		VkRenderPass mRenderPass{ VK_NULL_HANDLE };
 

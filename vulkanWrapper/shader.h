@@ -16,7 +16,7 @@ namespace FF::Wrapper {
 		~Shader();
 
 		[[nodiscard]] auto getShaderStage() const { return mShaderStage; }
-		[[nodiscard]] auto getShaderEntruPoint() const { return mEbtryPoint; }
+		[[nodiscard]] auto& getShaderEntryPoint() const { return mEbtryPoint; }
 		[[nodiscard]] auto getShaderModule() const { return mShaderModule; }
 
 	private:

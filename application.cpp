@@ -20,8 +20,11 @@ namespace FF {
 		mSwapChain = Wrapper::SwapChain::create(mDevice, mWindow, mSurface);
 
 		mRenderPass = Wrapper::RenderPass::create(mDevice);
+		createRenderPass();
 
-		mPipeline = Wrapper::Pipeline::create(mDevice);
+		mSwapChain->createFrameBuffers(mRenderPass);
+
+		mPipeline = Wrapper::Pipeline::create(mDevice, mRenderPass);
 		
 		createPipeline();
 	}
@@ -64,7 +67,7 @@ namespace FF {
 		mPipeline->mAssemblyState.primitiveRestartEnable = VK_FALSE; //如果设置true， 从0xff 重新开始算三角形，不和前面的三角形连起来
 
 		//光栅化设置
-		mPipeline->mRasterstate.polygonMode = VK_POLYGON_MODE_FILL; //光栅化的时候如何解释这一堆图元，是fill还是line  // 其他模式需要开启gpu特性
+		mPipeline->mRasterstate.polygonMode = VK_POLYGON_MODE_FILL; //光栅化的时候如何解释这一堆图元，是fill还是line  // 其他模式需要开启gpu特性 //多边形绘制模式（填充、线框、点）
 		mPipeline->mRasterstate.lineWidth = 1.0f;//大于1需要开启gpu特性
 		mPipeline->mRasterstate.cullMode = VK_CULL_MODE_BACK_BIT; //背面剔除
 		mPipeline->mRasterstate.frontFace = VK_FRONT_FACE_CLOCKWISE; // 顺时针为正面
@@ -125,8 +128,43 @@ namespace FF {
 	}
 
 	void Application::createRenderPass() {
+		//输入画布的描述
 		VkAttachmentDescription attachmentDes{};
-		attachmentDes.format =   
+		attachmentDes.format = mSwapChain->getFormat();
+		attachmentDes.samples = VK_SAMPLE_COUNT_1_BIT;
+		attachmentDes.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;//加载图片进来的时候，把画布给到renderpass ，画布上原来的数据保留或者不保留
+		attachmentDes.storeOp = VK_ATTACHMENT_STORE_OP_STORE;//输出
+		attachmentDes.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		attachmentDes.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		attachmentDes.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		attachmentDes.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+		mRenderPass->addAttchment(attachmentDes);
+
+		//对于画布的索引设置，以及格式要求
+		VkAttachmentReference attachmentRef{};
+		attachmentRef.attachment = 0;
+		attachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		
+		//创建子流程
+		Wrapper::SubPass subPass{};
+		subPass.addColorAttachmentRefrence(attachmentRef);
+		subPass.buildSubpassDescription();
+
+		mRenderPass->addSubPass(subPass);
+
+		//子流程之间的依赖关系
+		VkSubpassDependency dependency{};
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL; //虚拟流程
+		dependency.dstSubpass = 0; //代表subPass数组中的第0个subpass
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; //哪个阶段
+		dependency.srcAccessMask = 0;//那个操作,0表示不关心在哪个阶段
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; //即将在输出到画布上颜色的这个阶段停下来，等待上面的操作完成
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+		mRenderPass->addDependency(dependency);
+
+		mRenderPass->buildRenderPass();
 	}
 
 	void Application::mainLoop() {
@@ -137,6 +175,7 @@ namespace FF {
 
 	void Application::clearUp() {
 		mPipeline.reset();
+		mRenderPass.reset();
 		mSwapChain.reset();
 		mDevice.reset(); 
 		mSurface.reset();
