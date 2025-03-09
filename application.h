@@ -9,6 +9,7 @@
 #include"vulkanWrapper/shader.h"
 #include "vulkanWrapper/pipeline.h"
 #include "vulkanWrapper/renderPass.h"
+#include "vulkanWrapper/commandPoll.h"
 namespace FF {
 	
 	const int WIDTH = 800;
