@@ -10,6 +10,7 @@
 #include "vulkanWrapper/pipeline.h"
 #include "vulkanWrapper/renderPass.h"
 #include "vulkanWrapper/commandPoll.h"
+#include "vulkanWrapper/commandBuffer.h"
 namespace FF {
 	
 	const int WIDTH = 800;
@@ -40,5 +41,7 @@ namespace FF {
 		Wrapper::SwapChain::Ptr mSwapChain{ nullptr };
 		Wrapper::Pipeline::Ptr mPipeline{ nullptr };
 		Wrapper::RenderPass::Ptr mRenderPass{ nullptr };
+		Wrapper::CommandPool::Ptr mCommandPool{ nullptr };
+		Wrapper::CommandBuffer::Ptr mCommandBuffer{ nullptr };
 	};
 }

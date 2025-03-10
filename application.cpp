@@ -27,6 +27,8 @@ namespace FF {
 		mPipeline = Wrapper::Pipeline::create(mDevice, mRenderPass);
 		
 		createPipeline();
+
+		mCommandPool = Wrapper::CommandPool::create(mDevice);
 	}
 	void Application::createPipeline() {
 		//ÉèÖÃÊÓ¿Ú
