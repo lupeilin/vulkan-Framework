@@ -34,7 +34,8 @@ namespace FF::Wrapper {
 		VkPipelineDepthStencilStateCreateInfo mDepthStencilState{};
 		VkPipelineLayoutCreateInfo mLayoutState{};
 
-		//TODO£ºneeds  render pass and subpass
+	public:
+		[[nodiscard]] auto getPipeline() { return mPipeline; }
 
 	private:
 		VkPipeline mPipeline{ VK_NULL_HANDLE };

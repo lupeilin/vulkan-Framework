@@ -15,7 +15,7 @@ namespace FF::Wrapper {
 
 		CommandBuffer(const Device::Ptr &device, const CommandPool::Ptr &commandPool, bool asSecondry = false);
 
-		~CommandBuffer();
+		~CommandBuffer(); 
 
 		//发送drawCall命令出去之前，需要构建CommandBuffer ，构建CommandBuffer需要如下几个过程
 		//begin 
@@ -54,6 +54,9 @@ namespace FF::Wrapper {
 		void endRenderPass();
 
 		void end();
+
+		[[nodiscard]] auto getCommandBuffer() const { return mCommandBuffer; }
+
 	private:
 		VkCommandBuffer mCommandBuffer{ VK_NULL_HANDLE };
 		Device::Ptr mDevice{ nullptr };

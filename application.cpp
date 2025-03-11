@@ -29,6 +29,42 @@ namespace FF {
 		createPipeline();
 
 		mCommandPool = Wrapper::CommandPool::create(mDevice);
+
+		mCommandBuffers.resize(mSwapChain->getImageCount());
+
+		for (int i = 0; i < mSwapChain->getImageCount(); ++i) {
+			mCommandBuffers[i] = Wrapper::CommandBuffer::create(mDevice, mCommandPool);
+
+			mCommandBuffers[i]->begin();
+
+			VkRenderPassBeginInfo renderPassBeginInfo{};
+			renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			renderPassBeginInfo.renderPass = mRenderPass->getRenderPass();
+			renderPassBeginInfo.framebuffer = mSwapChain->getFrameBuffer(i);
+			renderPassBeginInfo.renderArea.offset = { 0, 0 };
+			renderPassBeginInfo.renderArea.extent = mSwapChain->getExtent();
+			 
+			VkClearValue  clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
+			renderPassBeginInfo.clearValueCount = 1;
+			renderPassBeginInfo.pClearValues = &clearColor;
+
+			mCommandBuffers[i]->beginRenderPass(renderPassBeginInfo);
+
+			mCommandBuffers[i]->bindGraphicPipeline(mPipeline->getPipeline());
+			mCommandBuffers[i]->draw(3);
+			
+			mCommandBuffers[i]->endRenderPass();
+
+			mCommandBuffers[i]->end();
+		}
+		for (int i = 0; i < mSwapChain->getImageCount(); ++i) {
+			auto imageSemaphore = Wrapper::Semaphore::create(mDevice);
+			mImageAvailableSemaphores.push_back(imageSemaphore);
+
+			auto renderSemaphore = Wrapper::Semaphore::create(mDevice);
+			mRenderFinishedSemaphores.push_back(renderSemaphore);
+		}
+
 	}
 	void Application::createPipeline() {
 		//设置视口
@@ -170,10 +206,72 @@ namespace FF {
 	}
 
 	void Application::mainLoop() {
-		while (!mWindow->shouldClose()){
+		while (!mWindow->shouldClose()) {
 			mWindow->pollEvents();
+
+			render();
 		}
 	}
+
+	void Application::render() {
+		//获取交换链当中的下一帧
+		uint32_t imageIndex{ 0 };
+		vkAcquireNextImageKHR(
+			mDevice->getDevice(),
+			mSwapChain->getSwapchain(),
+			UINT64_MAX,
+			mImageAvailableSemaphores[mCurrentFrame]->getSemaphore(),
+			VK_NULL_HANDLE,
+			&imageIndex);
+
+		//构建提交信息
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+		//提交1  提交2  提交3  没渲染完  提交1 （肯定会报错，需要一个控制手段）
+
+		//同步信息，渲染对于显示图像的依赖，显示完毕后，才能输出颜色
+		VkSemaphore waitSemaphores[] = { mImageAvailableSemaphores[mCurrentFrame]->getSemaphore() };
+		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = waitSemaphores;
+		submitInfo.pWaitDstStageMask = waitStages;
+		
+		//指定提交哪些命令
+		auto commandBuffer = mCommandBuffers[imageIndex]->getCommandBuffer();
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+
+		VkSemaphore signalSemaphore[] = { mRenderFinishedSemaphores[mCurrentFrame]->getSemaphore() };
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = signalSemaphore;
+
+		//提交渲染命令
+		if (vkQueueSubmit(mDevice->getGraphicQueue(), 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS) {
+			throw std::runtime_error("Error : failed to submit renderCommand");
+		}
+
+		//提交显示命令
+		VkPresentInfoKHR presentInfo{};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pWaitSemaphores = signalSemaphore;
+
+		//到那个交换链上去做显示
+		VkSwapchainKHR swapChains[] = { mSwapChain->getSwapchain() };
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = swapChains;
+
+		//用swapchain的哪一帧去渲染
+		presentInfo.pImageIndices = &imageIndex;
+
+		vkQueuePresentKHR(mDevice->getPresentQueue(), &presentInfo);
+
+		mCurrentFrame = (mCurrentFrame + 1) % mSwapChain->getImageCount(); 
+	}
+
 
 	void Application::clearUp() {
 		mPipeline.reset();

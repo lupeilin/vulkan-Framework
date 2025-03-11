@@ -11,6 +11,7 @@
 #include "vulkanWrapper/renderPass.h"
 #include "vulkanWrapper/commandPoll.h"
 #include "vulkanWrapper/commandBuffer.h"
+#include "vulkanWrapper/semaphore.h"
 namespace FF {
 	
 	const int WIDTH = 800;
@@ -28,12 +29,15 @@ namespace FF {
 
 		void mainLoop();
 
+		void render();
+
 		void clearUp();
 
 	private:
 		void createPipeline();
 		void createRenderPass();
 	private:
+		int mCurrentFrame{ 0 };
 		Wrapper::Window::Ptr mWindow{ nullptr };
 		Wrapper::Instance::Ptr mInstance{ nullptr };
 		Wrapper::Device::Ptr mDevice{ nullptr };
@@ -43,5 +47,10 @@ namespace FF {
 		Wrapper::RenderPass::Ptr mRenderPass{ nullptr };
 		Wrapper::CommandPool::Ptr mCommandPool{ nullptr };
 		Wrapper::CommandBuffer::Ptr mCommandBuffer{ nullptr };
+
+		std::vector<Wrapper::CommandBuffer::Ptr> mCommandBuffers{};
+		std::vector<Wrapper::Semaphore::Ptr> mImageAvailableSemaphores{};
+		std::vector<Wrapper::Semaphore::Ptr> mRenderFinishedSemaphores{};
+
 	};
 }
