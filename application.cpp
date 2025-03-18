@@ -63,6 +63,10 @@ namespace FF {
 
 			auto renderSemaphore = Wrapper::Semaphore::create(mDevice);
 			mRenderFinishedSemaphores.push_back(renderSemaphore);
+
+			//对于每一个都生成一个fence
+			auto fence = Wrapper::Fence::create(mDevice);
+			mFences.push_back(fence);
 		}
 
 	}
@@ -211,9 +215,12 @@ namespace FF {
 
 			render();
 		}
+		vkDeviceWaitIdle(mDevice->getDevice());
 	}
 
 	void Application::render() {
+		//等待当前要提交的frameBuffer提交完毕
+		mFences[mCurrentFrame]->block();
 		//获取交换链当中的下一帧
 		uint32_t imageIndex{ 0 };
 		vkAcquireNextImageKHR(
@@ -247,8 +254,9 @@ namespace FF {
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSemaphore;
 
+		mFences[mCurrentFrame]->resetFence();
 		//提交渲染命令
-		if (vkQueueSubmit(mDevice->getGraphicQueue(), 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS) {
+		if (vkQueueSubmit(mDevice->getGraphicQueue(), 1, &submitInfo, mFences[mCurrentFrame]->getFence()) != VK_SUCCESS) {
 			throw std::runtime_error("Error : failed to submit renderCommand");
 		}
 
