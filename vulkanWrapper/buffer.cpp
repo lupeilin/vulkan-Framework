@@ -3,9 +3,31 @@
 #include "commandPoll.h" 
 namespace FF::Wrapper {
 
+	Buffer::Ptr Buffer::createVertexBuffer(const Device::Ptr& device, VkDeviceSize size, void* pData) {
+		auto buffer = Buffer::create(
+			device, size,
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, //copy的dst  buffer ，是一个vertex buffer
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT//创建成localbuffer，因为模型数据一般不怎么修改
+		);
+
+		buffer->updataBufferByStage(pData, size);
+		return buffer;
+	}
+
+	Buffer::Ptr Buffer::createIndexBuffer(const Device::Ptr& device, VkDeviceSize size, void* pData) {
+		auto buffer = Buffer::create(
+			device, size,
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, //copy的dst  buffer ，是一个index buffer
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT//创建成localbuffer，因为模型数据一般不怎么修改
+		);
+
+		buffer->updataBufferByStage(pData, size);
+		return buffer;
+	}
+
 	Buffer::Buffer(const Device::Ptr& device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
 		mDevice = device;
-		
+
 		VkBufferCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		createInfo.size = size;
@@ -39,7 +61,7 @@ namespace FF::Wrapper {
 		vkBindBufferMemory(mDevice->getDevice(), mBuffer, mBufferMemory, 0);
 	}
 
-	Buffer::~Buffer(){
+	Buffer::~Buffer() {
 		if (mBuffer != VK_NULL_HANDLE) {
 			vkDestroyBuffer(mDevice->getDevice(), mBuffer, nullptr);
 		}
@@ -56,7 +78,7 @@ namespace FF::Wrapper {
 		// 假设 typeFilter = 0x001 | 0x100 = 0x101 , i = 0,   第 i个对应的类型就是 1 << i,
 		for (uint32_t i = 0; i < memProps.memoryTypeCount; ++i) {
 			if ((typeFilter & (1 << i)) && ((memProps.memoryTypes[i].propertyFlags & properties) == properties)) {
-				return i; 
+				return i;
 			}
 		}
 
@@ -79,13 +101,31 @@ namespace FF::Wrapper {
 		//VK_BUFFER_USAGE_TRANSFER_SRC_BIT : 表示这个buffer被用于传输数据，而且是数据传输的源头
 		//VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : 表示memcpy之后，数据直接刷入gpu内存
 		auto stageBuffer = Buffer::create(mDevice, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-		
+
 		stageBuffer->updataBufferByMap(data, size);
 
-
+		copyBuffer(stageBuffer->getBuffer(), mBuffer, static_cast<VkDeviceSize>(size));
 	}
 
+	//把数据从cpu可见的buffer拷贝到localBuffer
 	void  Buffer::copyBuffer(const VkBuffer& srcBuufer, const VkBuffer& dstBuffer, VkDeviceSize size) {
 
+		//queue有graphic queue、present queue、 transform queue，我们没有船舰transform queue，所以我们在这里用graphic queue代替使用
+		auto commandPool = CommandPool::create(mDevice);
+		auto commandBuffer = CommandBuffer::create(mDevice, commandPool);
+
+		commandBuffer->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);//这个命令只提交一次
+
+		VkBufferCopy copyInfo{};
+		copyInfo.size = size;
+
+		commandBuffer->copyBuffer(srcBuufer, dstBuffer, 1, { copyInfo });
+
+		commandBuffer->end();
+
+		commandBuffer->submitSync(mDevice->getGraphicQueue(), VK_NULL_HANDLE);
 	}
+
+	
+
 }

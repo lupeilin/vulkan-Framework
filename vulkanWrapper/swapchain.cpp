@@ -90,7 +90,7 @@ namespace FF::Wrapper {
 		for (int i = 0; i < mImageCount; i++) {
 			//frameBuffer  里面有一帧的数据，比如有n个不同的ColorAttachment 一个DepthStencilAttachment， 
 			//这些东西的集合为一个frameBuffer，送入管线，就会线程一个gpu的集合，这个集合由上方的attachment构成
-			std::array<VkImageView, 1> attachments = { mSwapChainImageViews[i] };
+			std::array<VkImageView, 1> attachments = { mSwapChainImageViews[i] }; // 这里 mSwapChainImageViews[i] 的顺序要和 创建renderPass的时候的VkAttachmentDescription的顺序保持一致
 
 			VkFramebufferCreateInfo frameBufferCreateInfo{};
 			frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

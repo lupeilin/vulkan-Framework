@@ -51,6 +51,7 @@ namespace FF {
 			mCommandBuffers[i]->beginRenderPass(renderPassBeginInfo);
 
 			mCommandBuffers[i]->bindGraphicPipeline(mPipeline->getPipeline());
+		
 			mCommandBuffers[i]->draw(3);
 			
 			mCommandBuffers[i]->endRenderPass();

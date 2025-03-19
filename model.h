@@ -1,6 +1,7 @@
 #pragma once
 #include "base.h"
-
+#include "vulkanWrapper/buffer.h"
+#include "vulkanWrapper/device.h"
 namespace FF {
 	struct Vertex
 	{
@@ -14,12 +15,17 @@ namespace FF {
 		using Ptr = std::shared_ptr<Model>;
 		static Ptr create() { return std::make_shared<Model>(); }
 
-		Model() {
+		Model(const Wrapper::Device::Ptr &device) {
 			mDatas = {
 				{{0.0f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}}, //前三个是坐标，后三个是颜色
 				{{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
 				{{-0.5f, 0.5f, 0.0f},{0.0f, 0.0f, 1.0f}}
 			};
+			//因为设置了  mPipeline->mRasterstate.frontFace = VK_FRONT_FACE_CLOCKWISE; // 顺时针为正面
+			mIndexDatas = { 0, 1, 2 };
+
+			mVertexBuffer = Wrapper::Buffer::createVertexBuffer(device, mDatas.size(), mDatas.data());
+			mIndexBuffer = Wrapper::Buffer::createIndexBuffer(device, mIndexDatas.size(), mIndexDatas.data());
 		}
 		~Model(){}
 
@@ -51,8 +57,16 @@ namespace FF {
 			return attributeDes;
 		}
 		
+		[[nodiscard]] auto getVertexBuffer() { return mVertexBuffer; }
+		[[nodiscard]] auto getIndexBuffer() { return mIndexBuffer; }
 
 	private:
 		std::vector<Vertex> mDatas{};
+		std::vector<int> mIndexDatas{};
+
+		Wrapper::Device::Ptr mDevice{ nullptr };
+
+		Wrapper::Buffer::Ptr mVertexBuffer{ nullptr };
+		Wrapper::Buffer::Ptr mIndexBuffer{ nullptr };
 	};
 }

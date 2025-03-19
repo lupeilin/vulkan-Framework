@@ -11,7 +11,12 @@ namespace FF::Wrapper {
 		static Ptr create(const Device::Ptr& device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) { 
 			return std::make_shared<Buffer>(device, size, usage, properties); 
 		}
+	public:
+		static Ptr createVertexBuffer(const Device::Ptr& device, VkDeviceSize size, void* pData);
 
+		static Ptr createIndexBuffer(const Device::Ptr& device, VkDeviceSize size, void* pData);
+
+	public:
 		Buffer(const Device::Ptr &device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
 		~Buffer();
 
@@ -28,6 +33,8 @@ namespace FF::Wrapper {
 		void updataBufferByStage(void* data, size_t size);
 
 		void copyBuffer(const VkBuffer& srcBuufer, const VkBuffer& dstBuffer, VkDeviceSize size);
+
+		[[nodiscard]] auto getBuffer() { return mBuffer; }
 
 	private:
 		uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);

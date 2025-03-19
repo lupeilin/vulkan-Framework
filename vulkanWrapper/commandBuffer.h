@@ -55,6 +55,10 @@ namespace FF::Wrapper {
 
 		void end();
 
+		void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t copyInfoCount, const std::vector<VkBufferCopy> &copyInfos);
+
+		void submitSync(VkQueue queue, VkFence fence);
+
 		[[nodiscard]] auto getCommandBuffer() const { return mCommandBuffer; }
 
 	private:

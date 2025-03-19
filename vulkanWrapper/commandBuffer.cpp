@@ -55,5 +55,18 @@ namespace FF::Wrapper {
 			throw std::runtime_error("Error : failed to end  command buffer");
 		}
 	}
+	//const std::vector<VkBufferCopy>& copyInfos 这里必须用引用，因为不用引用的话，就是一个临时变量，等会就销毁了。
+	void CommandBuffer::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t copyInfoCount, const std::vector<VkBufferCopy>& copyInfos) {
+		vkCmdCopyBuffer(mCommandBuffer, srcBuffer, dstBuffer, copyInfoCount, copyInfos.data());
+	}
 
+	void CommandBuffer::submitSync(VkQueue queue, VkFence fence) {
+		VkSubmitInfo submitInfo{};
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &mCommandBuffer;
+
+		vkQueueSubmit(queue, 1, &submitInfo, fence);
+
+		vkQueueWaitIdle(queue);
+	}
 }
