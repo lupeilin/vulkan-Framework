@@ -24,6 +24,9 @@ namespace FF {
 
 		mSwapChain->createFrameBuffers(mRenderPass);
 
+		//创建模型  之后我们就可以向pipeline提供描述信息了 
+		mModel = Model::create(mDevice);
+
 		mPipeline = Wrapper::Pipeline::create(mDevice, mRenderPass);
 		
 		createPipeline();
@@ -32,7 +35,7 @@ namespace FF {
 
 		mCommandBuffers.resize(mSwapChain->getImageCount());
 
-		for (int i = 0; i < mSwapChain->getImageCount(); ++i) {
+		for (uint32_t i = 0; i < mSwapChain->getImageCount(); ++i) {
 			mCommandBuffers[i] = Wrapper::CommandBuffer::create(mDevice, mCommandPool);
 
 			mCommandBuffers[i]->begin();
@@ -51,14 +54,19 @@ namespace FF {
 			mCommandBuffers[i]->beginRenderPass(renderPassBeginInfo);
 
 			mCommandBuffers[i]->bindGraphicPipeline(mPipeline->getPipeline());
+
+			//mCommandBuffers[i]->bindVertexBuffer({ mModel->getVertexBuffer()->getBuffer() });
+			mCommandBuffers[i]->bindVertexBuffer({ mModel->getVertexBuffers()});
+
+			mCommandBuffers[i]->bindIndexBuffer(mModel->getIndexBuffer()->getBuffer());
 		
-			mCommandBuffers[i]->draw(3);
+			mCommandBuffers[i]->drawIndex(mModel->getIndexCount());
 			
 			mCommandBuffers[i]->endRenderPass();
 
 			mCommandBuffers[i]->end();
 		}
-		for (int i = 0; i < mSwapChain->getImageCount(); ++i) {
+		for (uint32_t i = 0; i < mSwapChain->getImageCount(); ++i) {
 			auto imageSemaphore = Wrapper::Semaphore::create(mDevice);
 			mImageAvailableSemaphores.push_back(imageSemaphore);
 
@@ -69,6 +77,7 @@ namespace FF {
 			auto fence = Wrapper::Fence::create(mDevice);
 			mFences.push_back(fence);
 		}
+
 
 	}
 	void Application::createPipeline() {
@@ -100,10 +109,13 @@ namespace FF {
 		mPipeline->setShaderGroup(shaderGroup);
 		
 		//顶点的排布模式
-		mPipeline->mVertexInputStage.vertexBindingDescriptionCount = 0;
-		mPipeline->mVertexInputStage.pVertexBindingDescriptions = nullptr;
-		mPipeline->mVertexInputStage.vertexAttributeDescriptionCount = 0;
-		mPipeline->mVertexInputStage.pVertexAttributeDescriptions = nullptr;
+		auto vertexBindingDes = mModel->getVertexInputBindingDescriptions();
+		auto attributeDes = mModel->getAttributeDescriptions();
+
+		mPipeline->mVertexInputStage.vertexBindingDescriptionCount = static_cast<uint32_t>(vertexBindingDes.size());
+		mPipeline->mVertexInputStage.pVertexBindingDescriptions = vertexBindingDes.data();
+		mPipeline->mVertexInputStage.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDes.size());
+		mPipeline->mVertexInputStage.pVertexAttributeDescriptions = attributeDes.data();
 
 		//图元装配
 		mPipeline->mAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;

@@ -79,7 +79,7 @@ namespace FF::Wrapper {
 
 		//创建imageView
 		mSwapChainImageViews.resize(mImageCount);
-		for (int i = 0; i < mImageCount; ++i) {
+		for (uint32_t i = 0; i < mImageCount; ++i) {
 			mSwapChainImageViews[i] = createImageView(mSwapChianImages[i], mSwapChainFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 		}
 
@@ -87,7 +87,7 @@ namespace FF::Wrapper {
 	void SwapChain::createFrameBuffers(RenderPass::Ptr& renderPass) {
 		//创建Framebuffer
 		mSwapChainFrameBuffers.resize(mImageCount);
-		for (int i = 0; i < mImageCount; i++) {
+		for (uint32_t i = 0; i < mImageCount; i++) {
 			//frameBuffer  里面有一帧的数据，比如有n个不同的ColorAttachment 一个DepthStencilAttachment， 
 			//这些东西的集合为一个frameBuffer，送入管线，就会线程一个gpu的集合，这个集合由上方的attachment构成
 			std::array<VkImageView, 1> attachments = { mSwapChainImageViews[i] }; // 这里 mSwapChainImageViews[i] 的顺序要和 创建renderPass的时候的VkAttachmentDescription的顺序保持一致

@@ -89,7 +89,7 @@ namespace FF::Wrapper {
 		void* memPtr = nullptr; //这个就是等会要map的地址
 
 		vkMapMemory(mDevice->getDevice(), mBufferMemory, 0, size, 0, &memPtr);//把 memPtr指向 mBufferMemory的起始地址。
-		memcpy(data, memPtr, size);
+		memcpy(memPtr, data, size);
 		vkUnmapMemory(mDevice->getDevice(), mBufferMemory);
 
 		//这里其实是把gpu的显存，划分到cpu的虚拟地址当中，当成了cpu的内存进行操作
@@ -117,7 +117,7 @@ namespace FF::Wrapper {
 		commandBuffer->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);//这个命令只提交一次
 
 		VkBufferCopy copyInfo{};
-		copyInfo.size = size;
+		copyInfo.size = size; 
 
 		commandBuffer->copyBuffer(srcBuufer, dstBuffer, 1, { copyInfo });
 

@@ -56,5 +56,7 @@ namespace FF {
 		std::vector<Wrapper::Semaphore::Ptr> mImageAvailableSemaphores{};
 		std::vector<Wrapper::Semaphore::Ptr> mRenderFinishedSemaphores{};
 		std::vector < Wrapper::Fence::Ptr> mFences{};
+
+		Model::Ptr mModel{ nullptr };
 	};
 }

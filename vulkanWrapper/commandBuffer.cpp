@@ -39,11 +39,25 @@ namespace FF::Wrapper {
 		vkCmdBeginRenderPass(mCommandBuffer, &renderPassBeginInfo, subPassContents);
 	}
 
+	void CommandBuffer::bindVertexBuffer(const std::vector<VkBuffer>& buffers) {
+		std::vector<VkDeviceSize> offsets(buffers.size(), 0); //我们有多少个buffer，就有多少个0，表示每一个buffer都是从头开始读。
+		
+		vkCmdBindVertexBuffers(mCommandBuffer, 0, static_cast<uint32_t>(buffers.size()), buffers.data(), offsets.data());
+	}
+
+	void CommandBuffer::bindIndexBuffer(const VkBuffer& buffer) {
+		vkCmdBindIndexBuffer(mCommandBuffer, buffer, 0, VK_INDEX_TYPE_UINT32); //indexType是说，这个index是一个int16，还是int32，还是。。。
+	}
+
 	void CommandBuffer::bindGraphicPipeline(const VkPipeline& pipeline) { //为本次渲染绑定一个pipeline
 		vkCmdBindPipeline(mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 	}
 	void CommandBuffer::draw(size_t vertexCount) {
 		vkCmdDraw(mCommandBuffer, vertexCount, 1, 0, 0);
+	}
+
+	void CommandBuffer::drawIndex(size_t indexCount) {
+		vkCmdDrawIndexed(mCommandBuffer, indexCount, 1, 0, 0, 0);
 	}
 
 	void CommandBuffer::endRenderPass() {
@@ -62,6 +76,7 @@ namespace FF::Wrapper {
 
 	void CommandBuffer::submitSync(VkQueue queue, VkFence fence) {
 		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &mCommandBuffer;
 

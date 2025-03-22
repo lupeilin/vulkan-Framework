@@ -49,7 +49,13 @@ namespace FF::Wrapper {
 
 		void bindGraphicPipeline(const VkPipeline& pipeline); //为本次渲染绑定一个pipeline
 
+		void bindVertexBuffer(const std::vector<VkBuffer>& buffers);
+
+		void bindIndexBuffer(const VkBuffer& buffer);
+
 		void draw(size_t vertexCount);
+
+		void drawIndex(size_t indexCount);
 
 		void endRenderPass();
 

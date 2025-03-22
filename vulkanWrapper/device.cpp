@@ -57,6 +57,7 @@ namespace FF::Wrapper {
 		if (!deviceFeatures.geometryShader) {
 			return 0;
 		}
+		return score;
 	}
 
 	bool Device::isDeviceSuitable(VkPhysicalDevice device) {
