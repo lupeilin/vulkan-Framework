@@ -16,7 +16,11 @@ namespace FF::Wrapper {
 		}
 	}
 
-	CommandBuffer::~CommandBuffer() {} //会随着CommandPool析构，而析构释放
+	CommandBuffer::~CommandBuffer() {
+		if (mCommandBuffer != VK_NULL_HANDLE) {
+			vkFreeCommandBuffers(mDevice->getDevice(), mCommandPool->getCommandPool(), 1, &mCommandBuffer);
+		}
+	} //会随着CommandPool析构，而析构释放
 
 	void CommandBuffer::begin(VkCommandBufferUsageFlags flag, const VkCommandBufferInheritanceInfo& inheritance) {
 		VkCommandBufferBeginInfo beginInfo{};

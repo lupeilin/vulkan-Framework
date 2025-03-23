@@ -17,9 +17,7 @@
 
 #include "model.h"
 namespace FF {
-	
-	const int WIDTH = 800;
-	const int HEIGHT = 600;
+
 	class Application
 	{
 	public:
@@ -40,6 +38,18 @@ namespace FF {
 	private:
 		void createPipeline();
 		void createRenderPass();
+		void createCommandBufers();
+		void createSyncObject();
+
+		//重建交换链： 当窗口大小发生变化的时候，交换链也要发生变化，  frame  view  pipeline  renderPass  sync
+		void recreateSwapChain();
+		
+		void cleanUpSwapChain();
+		
+
+	private:
+		unsigned int mWidth = 800;
+		unsigned int mHeight = 600;
 	private:
 		int mCurrentFrame{ 0 };
 		Wrapper::Window::Ptr mWindow{ nullptr };

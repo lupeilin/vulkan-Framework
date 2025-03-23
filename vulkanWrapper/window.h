@@ -10,6 +10,7 @@ namespace FF::Wrapper {
 		static Ptr create(const int& width, const int& height) { return std::make_shared<Window>(width ,height); }
 
 		Window(const int &width, const int &height);
+
 		~Window();
 
 		bool shouldClose();
@@ -17,6 +18,10 @@ namespace FF::Wrapper {
 		void pollEvents();
 
 		[[nodiscard]]auto getWindow() { return mWindow; }
+
+	public:
+		//记录window窗口大小变化
+		bool mWindowResized{ false };
 	private:
 		int mWidth{ 0 };
 		int mHeight{ 0 }; 

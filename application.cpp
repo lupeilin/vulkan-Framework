@@ -10,7 +10,7 @@ namespace FF {
 	}
 
 	void Application::initWindow() {
-		mWindow = Wrapper::Window::create(WIDTH, HEIGHT); 
+		mWindow = Wrapper::Window::create(mWidth, mHeight);
 	}
 
 	void Application::initVulkan() {
@@ -24,6 +24,9 @@ namespace FF {
 
 		mSwapChain->createFrameBuffers(mRenderPass);
 
+		mWidth = mSwapChain->getExtent().width;
+		mHeight = mSwapChain->getExtent().height;
+
 		//创建模型  之后我们就可以向pipeline提供描述信息了 
 		mModel = Model::create(mDevice);
 
@@ -35,49 +38,9 @@ namespace FF {
 
 		mCommandBuffers.resize(mSwapChain->getImageCount());
 
-		for (uint32_t i = 0; i < mSwapChain->getImageCount(); ++i) {
-			mCommandBuffers[i] = Wrapper::CommandBuffer::create(mDevice, mCommandPool);
+		createCommandBufers();
 
-			mCommandBuffers[i]->begin();
-
-			VkRenderPassBeginInfo renderPassBeginInfo{};
-			renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			renderPassBeginInfo.renderPass = mRenderPass->getRenderPass();
-			renderPassBeginInfo.framebuffer = mSwapChain->getFrameBuffer(i);
-			renderPassBeginInfo.renderArea.offset = { 0, 0 };
-			renderPassBeginInfo.renderArea.extent = mSwapChain->getExtent();
-			 
-			VkClearValue  clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
-			renderPassBeginInfo.clearValueCount = 1;
-			renderPassBeginInfo.pClearValues = &clearColor;
-
-			mCommandBuffers[i]->beginRenderPass(renderPassBeginInfo);
-
-			mCommandBuffers[i]->bindGraphicPipeline(mPipeline->getPipeline());
-
-			//mCommandBuffers[i]->bindVertexBuffer({ mModel->getVertexBuffer()->getBuffer() });
-			mCommandBuffers[i]->bindVertexBuffer({ mModel->getVertexBuffers()});
-
-			mCommandBuffers[i]->bindIndexBuffer(mModel->getIndexBuffer()->getBuffer());
-		
-			mCommandBuffers[i]->drawIndex(mModel->getIndexCount());
-			
-			mCommandBuffers[i]->endRenderPass();
-
-			mCommandBuffers[i]->end();
-		}
-		for (uint32_t i = 0; i < mSwapChain->getImageCount(); ++i) {
-			auto imageSemaphore = Wrapper::Semaphore::create(mDevice);
-			mImageAvailableSemaphores.push_back(imageSemaphore);
-
-			auto renderSemaphore = Wrapper::Semaphore::create(mDevice);
-			mRenderFinishedSemaphores.push_back(renderSemaphore);
-
-			//对于每一个都生成一个fence
-			auto fence = Wrapper::Fence::create(mDevice);
-			mFences.push_back(fence);
-		}
-
+		createSyncObject();
 
 	}
 	void Application::createPipeline() {
@@ -85,14 +48,14 @@ namespace FF {
 		VkViewport viewport = {};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
-		viewport.width = (float)WIDTH;
-		viewport.height = (float)HEIGHT;
+		viewport.width = (float)mWidth;
+		viewport.height = (float)mHeight;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0;
 
 		VkRect2D scissor = {};
 		scissor.offset = { 0, 0 };
-		scissor.extent = { WIDTH, HEIGHT };
+		scissor.extent = { mWidth, mHeight };
 
 		mPipeline->setViewPorts({ viewport });
 		mPipeline->setScissors({ scissor });
@@ -222,6 +185,101 @@ namespace FF {
 		mRenderPass->buildRenderPass();
 	}
 
+	void Application::createCommandBufers() {
+
+		for (uint32_t i = 0; i < mSwapChain->getImageCount(); ++i) {
+			mCommandBuffers[i] = Wrapper::CommandBuffer::create(mDevice, mCommandPool);
+
+			mCommandBuffers[i]->begin();
+
+			VkRenderPassBeginInfo renderPassBeginInfo{};
+			renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			renderPassBeginInfo.renderPass = mRenderPass->getRenderPass(); 
+			renderPassBeginInfo.framebuffer = mSwapChain->getFrameBuffer(i);
+			renderPassBeginInfo.renderArea.offset = { 0, 0 };
+			renderPassBeginInfo.renderArea.extent = mSwapChain->getExtent();
+
+			VkClearValue  clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
+			renderPassBeginInfo.clearValueCount = 1;
+			renderPassBeginInfo.pClearValues = &clearColor;
+
+			mCommandBuffers[i]->beginRenderPass(renderPassBeginInfo);
+
+			mCommandBuffers[i]->bindGraphicPipeline(mPipeline->getPipeline());
+
+			//mCommandBuffers[i]->bindVertexBuffer({ mModel->getVertexBuffer()->getBuffer() });
+			mCommandBuffers[i]->bindVertexBuffer({ mModel->getVertexBuffers() });
+
+			mCommandBuffers[i]->bindIndexBuffer(mModel->getIndexBuffer()->getBuffer());
+
+			mCommandBuffers[i]->drawIndex(mModel->getIndexCount());
+
+			mCommandBuffers[i]->endRenderPass();
+
+			mCommandBuffers[i]->end();
+		}
+	}
+
+	void Application::createSyncObject() {
+		for (uint32_t i = 0; i < mSwapChain->getImageCount(); ++i) {
+			auto imageSemaphore = Wrapper::Semaphore::create(mDevice);
+			mImageAvailableSemaphores.push_back(imageSemaphore);
+
+			auto renderSemaphore = Wrapper::Semaphore::create(mDevice);
+			mRenderFinishedSemaphores.push_back(renderSemaphore);
+
+			//对于每一个都生成一个fence
+			auto fence = Wrapper::Fence::create(mDevice);
+			mFences.push_back(fence);
+		}
+	}
+
+	void Application::recreateSwapChain() {
+		//处理窗体最小化的问题，如果窗体最小化了，我们就不着急重建
+		int width = 0, height = 0;
+		glfwGetFramebufferSize(mWindow->getWindow(), &width, &height);
+		while (width == 0 || height == 0) {
+			glfwWaitEvents();
+			glfwGetFramebufferSize(mWindow->getWindow(), &width, &height);
+		}
+
+		//等待当前窗口中的任务完成
+		vkDeviceWaitIdle(mDevice->getDevice());
+
+		//清理相关的资源
+		cleanUpSwapChain();
+
+		//重建
+		mSwapChain = Wrapper::SwapChain::create(mDevice, mWindow, mSurface);
+		mWidth = mSwapChain->getExtent().width;
+		mHeight = mSwapChain->getExtent().height;
+
+		mRenderPass = Wrapper::RenderPass::create(mDevice);
+		createRenderPass();
+
+		mSwapChain->createFrameBuffers(mRenderPass);
+
+		mPipeline = Wrapper::Pipeline::create(mDevice, mRenderPass);
+
+		createPipeline();
+
+		mCommandBuffers.resize(mSwapChain->getImageCount());
+
+		createCommandBufers();
+
+		createSyncObject();
+	}
+
+	void Application::cleanUpSwapChain() {
+		mSwapChain.reset();    //因为智能指针的计数为0的时候，我们的对象就会被释放。 
+		mCommandBuffers.clear();
+		mPipeline.reset();
+		mRenderPass.reset();
+		mImageAvailableSemaphores.clear();
+		mRenderFinishedSemaphores.clear();
+		mFences.clear();
+	}
+
 	void Application::mainLoop() {
 		while (!mWindow->shouldClose()) {
 			mWindow->pollEvents();
@@ -236,13 +294,22 @@ namespace FF {
 		mFences[mCurrentFrame]->block();
 		//获取交换链当中的下一帧
 		uint32_t imageIndex{ 0 };
-		vkAcquireNextImageKHR(
+		VkResult result = vkAcquireNextImageKHR(
 			mDevice->getDevice(),
 			mSwapChain->getSwapchain(),
 			UINT64_MAX,
 			mImageAvailableSemaphores[mCurrentFrame]->getSemaphore(),
 			VK_NULL_HANDLE,
 			&imageIndex);
+
+		//窗体发生了尺寸变化
+		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+			recreateSwapChain();
+			mWindow->mWindowResized = false;
+		}//VK_SUBOPTIMAL_KHR ：得到了一张认为可用的图像，但是表面格式不一定匹配
+		else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR){
+			throw std::runtime_error("Error : failed to acquire next image");
+		}
 
 		//构建提交信息
 		VkSubmitInfo submitInfo{};
@@ -288,7 +355,15 @@ namespace FF {
 		//用swapchain的哪一帧去渲染
 		presentInfo.pImageIndices = &imageIndex;
 
-		vkQueuePresentKHR(mDevice->getPresentQueue(), &presentInfo);
+		result = vkQueuePresentKHR(mDevice->getPresentQueue(), &presentInfo);
+		//由于驱动程序不一定精准，所以我们还需要用自己的标志位判断
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || mWindow->mWindowResized) {
+			recreateSwapChain();
+			mWindow->mWindowResized = false;
+		} 
+		else if (result != VK_SUCCESS) {
+			throw std::runtime_error("Error : failed to present");
+		}
 
 		mCurrentFrame = (mCurrentFrame + 1) % mSwapChain->getImageCount(); 
 	}
