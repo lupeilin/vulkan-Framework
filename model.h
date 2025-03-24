@@ -92,6 +92,10 @@ namespace FF {
 
 		[[nodiscard]] auto getIndexCount() { return mIndexDatas.size(); }
 
+		[[nodiscard]] auto getUniform() { return mUniform; }
+
+		void setModelMatrix(const glm::mat4 matrix) { mUniform.mModelMatrix = matrix;  }
+
 	private:
 		//std::vector<Vertex> mDatas{};
 		std::vector<float> mPositions{};
@@ -104,5 +108,7 @@ namespace FF {
 		Wrapper::Buffer::Ptr mPositionBuffer{ nullptr };
 		Wrapper::Buffer::Ptr mColorBuffer{ nullptr };
 		Wrapper::Buffer::Ptr mIndexBuffer{ nullptr };
+
+		ObjectUniform mUniform{};
 	};
 }

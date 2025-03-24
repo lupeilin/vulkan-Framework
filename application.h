@@ -14,10 +14,12 @@
 #include "vulkanWrapper/semaphore.h"
 #include "vulkanWrapper/fence.h"
 #include "vulkanWrapper/buffer.h"
+#include "vulkanWrapper/descriptorLayout.h"
+
 
 #include "model.h"
 namespace FF {
-
+	
 	class Application
 	{
 	public:
@@ -40,6 +42,7 @@ namespace FF {
 		void createRenderPass();
 		void createCommandBufers();
 		void createSyncObject();
+		void createDescriptorSetLayout();
 
 		//重建交换链： 当窗口大小发生变化的时候，交换链也要发生变化，  frame  view  pipeline  renderPass  sync
 		void recreateSwapChain();
@@ -67,6 +70,9 @@ namespace FF {
 		std::vector<Wrapper::Semaphore::Ptr> mRenderFinishedSemaphores{};
 		std::vector < Wrapper::Fence::Ptr> mFences{};
 
+		Wrapper::DescriptorSetLayout::Ptr mDescriptorSetLayout{};
+
 		Model::Ptr mModel{ nullptr };
+		VPMatrix mVPMatrix;
 	};
 }

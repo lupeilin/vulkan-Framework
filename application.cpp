@@ -30,6 +30,10 @@ namespace FF {
 		//创建模型  之后我们就可以向pipeline提供描述信息了 
 		mModel = Model::create(mDevice);
 
+		mDescriptorSetLayout = Wrapper::DescriptorSetLayout::create(mDevice);
+		createDescriptorSetLayout();
+
+
 		mPipeline = Wrapper::Pipeline::create(mDevice, mRenderPass);
 		
 		createPipeline();
@@ -137,8 +141,10 @@ namespace FF {
 		mPipeline->mBlendState.blendConstants[3] = 0.0f;
 
 		//uniform的传递
-		mPipeline->mLayoutState.setLayoutCount = 0;
-		mPipeline->mLayoutState.pSetLayouts = nullptr;
+		mPipeline->mLayoutState.setLayoutCount = 1;
+
+		auto layout = mDescriptorSetLayout->getLayout();
+		mPipeline->mLayoutState.pSetLayouts = &layout;
 		mPipeline->mLayoutState.pushConstantRangeCount = 0;
 		mPipeline->mLayoutState.pPushConstantRanges = nullptr;
 
@@ -232,6 +238,28 @@ namespace FF {
 			auto fence = Wrapper::Fence::create(mDevice);
 			mFences.push_back(fence);
 		}
+	}
+
+	void  Application::createDescriptorSetLayout() {
+		auto vpParam = Wrapper::DescriptorBindingParameter::create();
+		vpParam->mBinding = 0;
+		vpParam->mCount = 1;
+		vpParam->mDescriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		vpParam->mSize = sizeof(VPMatrix);
+		vpParam->mStage = VK_SHADER_STAGE_VERTEX_BIT;
+
+		mDescriptorSetLayout->addUniformParam(vpParam);
+
+		auto objectParam = Wrapper::DescriptorBindingParameter::create();
+		objectParam->mBinding = 1;
+		objectParam->mCount = 1;
+		objectParam->mDescriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		objectParam->mSize = sizeof(ObjectUniform);
+		objectParam->mStage = VK_SHADER_STAGE_VERTEX_BIT;
+
+		mDescriptorSetLayout->addUniformParam(objectParam);
+
+		mDescriptorSetLayout->build();
 	}
 
 	void Application::recreateSwapChain() {
