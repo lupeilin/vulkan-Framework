@@ -15,8 +15,9 @@
 #include "vulkanWrapper/fence.h"
 #include "vulkanWrapper/buffer.h"
 #include "vulkanWrapper/descriptorLayout.h"
+#include "vulkanWrapper/descriptorPool.h"
 
-
+#include "vulkanWrapper/description.h"
 #include "model.h"
 namespace FF {
 	
@@ -42,7 +43,7 @@ namespace FF {
 		void createRenderPass();
 		void createCommandBufers();
 		void createSyncObject();
-		void createDescriptorSetLayout();
+		void createUniformParams();
 
 		//重建交换链： 当窗口大小发生变化的时候，交换链也要发生变化，  frame  view  pipeline  renderPass  sync
 		void recreateSwapChain();
@@ -68,10 +69,13 @@ namespace FF {
 		std::vector<Wrapper::CommandBuffer::Ptr> mCommandBuffers{};
 		std::vector<Wrapper::Semaphore::Ptr> mImageAvailableSemaphores{};
 		std::vector<Wrapper::Semaphore::Ptr> mRenderFinishedSemaphores{};
-		std::vector < Wrapper::Fence::Ptr> mFences{};
+		std::vector <Wrapper::Fence::Ptr> mFences{};
 
-		Wrapper::DescriptorSetLayout::Ptr mDescriptorSetLayout{};
+		std::vector<Wrapper::UniformParameter::Ptr> mUniformParams{}; //所有有所关于uniform的描述信息
 
+		Wrapper::DescriptorSetLayout::Ptr mDescriptorSetLayout{ nullptr };
+		Wrapper::DescriptorPool::Ptr mDescriptorPool{ nullptr };
+		 
 		Model::Ptr mModel{ nullptr };
 		VPMatrix mVPMatrix;
 	};

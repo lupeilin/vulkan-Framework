@@ -11,11 +11,9 @@ namespace FF::Wrapper {
 		}
 	}
 
-	void DescriptorSetLayout::addUniformParam(const DescriptorBindingParameter::Ptr& param) {
-		mParams.push_back(param);
-	}
+	void DescriptorSetLayout::build(const std::vector<UniformParameter::Ptr>& params) {
+		mParams = params;
 
-	void DescriptorSetLayout::build() {
 		if (mLayout != VK_NULL_HANDLE) {
 			vkDestroyDescriptorSetLayout(mDevice->getDevice(), mLayout, nullptr);
 		}
