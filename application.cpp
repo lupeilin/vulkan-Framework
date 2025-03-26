@@ -27,16 +27,12 @@ namespace FF {
 		mWidth = mSwapChain->getExtent().width;
 		mHeight = mSwapChain->getExtent().height;
 
+		//descriptor============================ 
+		mUniformManager = UniformManager::create();
+		mUniformManager->init(mDevice, mSwapChain->getImageCount());
+
 		//创建模型  之后我们就可以向pipeline提供描述信息了 
 		mModel = Model::create(mDevice);
-
-		//descriptor============================ 
-		createUniformParams();  
-		mDescriptorSetLayout = Wrapper::DescriptorSetLayout::create(mDevice);
-		mDescriptorSetLayout->build(mUniformParams);
-
-		mDescriptorPool = Wrapper::DescriptorPool::create(mDevice);
-		mDescriptorPool->build(mUniformParams, mSwapChain->getImageCount());
 
 		mPipeline = Wrapper::Pipeline::create(mDevice, mRenderPass);
 		
@@ -147,7 +143,7 @@ namespace FF {
 		//uniform的传递
 		mPipeline->mLayoutState.setLayoutCount = 1;
 
-		auto layout = mDescriptorSetLayout->getLayout();
+		auto layout = mUniformManager->getDescriptorSetLayout()->getLayout();
 		mPipeline->mLayoutState.pSetLayouts = &layout;
 		mPipeline->mLayoutState.pushConstantRangeCount = 0;
 		mPipeline->mLayoutState.pPushConstantRanges = nullptr;
@@ -242,28 +238,7 @@ namespace FF {
 			auto fence = Wrapper::Fence::create(mDevice);
 			mFences.push_back(fence);
 		}
-	}
-
-	void Application::createUniformParams() {
-		auto vpParam = Wrapper::UniformParameter::create();
-		vpParam->mBinding = 0;
-		vpParam->mCount = 1;
-		vpParam->mDescriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		vpParam->mSize = sizeof(VPMatrix);
-		vpParam->mStage = VK_SHADER_STAGE_VERTEX_BIT;
-
-		mUniformParams.push_back(vpParam);
-
-		auto objectParam = Wrapper::UniformParameter::create();
-		objectParam->mBinding = 1;
-		objectParam->mCount = 1;
-		objectParam->mDescriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		objectParam->mSize = sizeof(ObjectUniform);
-		objectParam->mStage = VK_SHADER_STAGE_VERTEX_BIT;
-
-		mUniformParams.push_back(objectParam); //所有所关于uniform的描述信息
-	}
-
+	} 
 
 	void Application::recreateSwapChain() {
 		//处理窗体最小化的问题，如果窗体最小化了，我们就不着急重建

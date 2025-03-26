@@ -25,7 +25,7 @@ namespace FF::Wrapper {
 		for (const auto& param : params) {
 			if (param->mDescriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) {
 				uniformBufferCount++;
-			}
+			} 
 			//TODO
 		}
 

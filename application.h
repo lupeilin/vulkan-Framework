@@ -14,10 +14,12 @@
 #include "vulkanWrapper/semaphore.h"
 #include "vulkanWrapper/fence.h"
 #include "vulkanWrapper/buffer.h"
-#include "vulkanWrapper/descriptorLayout.h"
+#include "vulkanWrapper/descriptorSetLayout.h"
 #include "vulkanWrapper/descriptorPool.h"
+#include "vulkanWrapper/descriptorSet.h"
+#include "vulkanWrapper/description.h"  
+#include "uniformManager.h"
 
-#include "vulkanWrapper/description.h"
 #include "model.h"
 namespace FF {
 	
@@ -71,10 +73,8 @@ namespace FF {
 		std::vector<Wrapper::Semaphore::Ptr> mRenderFinishedSemaphores{};
 		std::vector <Wrapper::Fence::Ptr> mFences{};
 
-		std::vector<Wrapper::UniformParameter::Ptr> mUniformParams{}; //所有有所关于uniform的描述信息
+		UniformManager::Ptr mUniformManager{ nullptr };
 
-		Wrapper::DescriptorSetLayout::Ptr mDescriptorSetLayout{ nullptr };
-		Wrapper::DescriptorPool::Ptr mDescriptorPool{ nullptr };
 		 
 		Model::Ptr mModel{ nullptr };
 		VPMatrix mVPMatrix;

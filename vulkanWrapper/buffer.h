@@ -35,7 +35,9 @@ namespace FF::Wrapper {
 
 		void copyBuffer(const VkBuffer& srcBuufer, const VkBuffer& dstBuffer, VkDeviceSize size);
 
-		[[nodiscard]] auto getBuffer() { return mBuffer; }
+		[[nodiscard]] auto getBuffer() const { return mBuffer; }
+		//[[nodiscard]] auto getBufferInfo() const  { return mBufferInfo; }  //如果这里是auto类型，就是一个临时变量，在使用过后就销毁了。
+		[[nodiscard]] VkDescriptorBufferInfo& getBufferInfo()  { return mBufferInfo; }
 
 	private:
 		uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -44,5 +46,6 @@ namespace FF::Wrapper {
 		VkBuffer mBuffer{ VK_NULL_HANDLE };//这里创建的mBuffer实际上是一个，在cpu端的描述符号。
 		VkDeviceMemory mBufferMemory{ VK_NULL_HANDLE }; //这个才是真正的gpu端创建的buffer
 		Device::Ptr mDevice{ nullptr };
+		VkDescriptorBufferInfo mBufferInfo{};
 	};
 }

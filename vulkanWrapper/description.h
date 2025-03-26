@@ -1,5 +1,6 @@
 #pragma once
-
+#include "buffer.h"
+ 
 namespace FF::Wrapper {
 	//我们需要知道，布局当中，到底有那些uniform，每一个多大，如何binding，每一个是什么类型
 	struct UniformParameter
@@ -14,5 +15,7 @@ namespace FF::Wrapper {
 		uint32_t mCount{ 0 };
 		VkDescriptorType mDescriptorType; //是uniform  还是 image texture
 		VkShaderStageFlagBits mStage;
+
+		std::vector<Buffer::Ptr> mBuffers{}; //描述信息对应的buffer
 	};
 }

@@ -72,6 +72,12 @@ namespace FF::Wrapper {
 
 		//将cpu端的描述mBuffer，和gpu端真正的buffer：mBufferMemory， 绑定起来。
 		vkBindBufferMemory(mDevice->getDevice(), mBuffer, mBufferMemory, 0);
+
+		//填写bufferInfo
+		mBufferInfo.buffer = mBuffer;
+		mBufferInfo.offset = 0;
+		mBufferInfo.range = size;
+
 	}
 
 	Buffer::~Buffer() {
