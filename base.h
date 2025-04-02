@@ -29,9 +29,16 @@ struct VPMatrix
 {
 	glm::mat4 mViewMatrix;
 	glm::mat4 mProjectionMatrix;
+	VPMatrix() {
+		mViewMatrix = glm::mat4(1.0f); //单位矩阵
+		mProjectionMatrix = glm::mat4(1.0f); //单位矩阵
+	}
 };
 
 struct ObjectUniform
 {
 	glm::mat4 mModelMatrix;
+	ObjectUniform() {
+		mModelMatrix = glm::mat4(1.0f); //单位矩阵
+	}
 };

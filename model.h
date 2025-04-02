@@ -96,6 +96,13 @@ namespace FF {
 
 		void setModelMatrix(const glm::mat4 matrix) { mUniform.mModelMatrix = matrix;  }
 
+		void updata() {
+			glm::mat4 rotateMatrix = glm::mat4(1.0f);
+			rotateMatrix = glm::rotate(rotateMatrix, glm::radians(mAngle), glm::vec3(0.0f, 0.0f, 1.0f));//ÈÆ×ÅzÖá×ª
+			mUniform.mModelMatrix = rotateMatrix;
+			mAngle += 0.05f;
+		}
+
 	private:
 		//std::vector<Vertex> mDatas{};
 		std::vector<float> mPositions{};
@@ -110,5 +117,7 @@ namespace FF {
 		Wrapper::Buffer::Ptr mIndexBuffer{ nullptr };
 
 		ObjectUniform mUniform{};
+
+		float mAngle{ 0.0f };
 	};
 }

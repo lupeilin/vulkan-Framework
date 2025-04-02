@@ -40,6 +40,8 @@ namespace FF::Wrapper {
 
 		~DescriptorSet();
 
+		[[nodiscard]] auto getDescriptorSet(int frameCount) const { return mDescriptorSets[frameCount]; }
+
 	private:
 		std::vector<VkDescriptorSet> mDescriptorSets{};
 		Device::Ptr mDevice{ nullptr };

@@ -33,7 +33,7 @@ namespace FF {
 
 		for (size_t i = 0; i < frameCount; i++)
 		{
-			auto buffer = Wrapper::Buffer::createUniformBuffer(device, vpParam->mSize, nullptr);
+			auto buffer = Wrapper::Buffer::createUniformBuffer(device, objectParam->mSize, nullptr);
 			objectParam->mBuffers.push_back(buffer);
 		}
 
@@ -44,6 +44,17 @@ namespace FF {
 
 		mDescriptorPool = Wrapper::DescriptorPool::create(device);
 		mDescriptorPool->build(mUniformParams, frameCount);
+
+		mDescriptorSet = Wrapper::DescriptorSet::create(device, mUniformParams, mDescriptorSetLayout, mDescriptorPool, frameCount);
+
 	}
 
+	void  UniformManager::updata(const VPMatrix& vpMatrix, const ObjectUniform& objectUniform, const int& frameCount) {
+		//updata vp matrix
+		mUniformParams[0]->mBuffers[frameCount]->updataBufferByMap((void *)&vpMatrix, sizeof(VPMatrix));
+
+		//updata objectUniform
+		mUniformParams[1]->mBuffers[frameCount]->updataBufferByMap((void*)&objectUniform, sizeof(ObjectUniform));
+
+	}
 }

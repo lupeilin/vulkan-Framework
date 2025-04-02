@@ -36,6 +36,8 @@ namespace FF::Wrapper {
 				descriptorSetWrite.dstArrayElement = 0;
 				descriptorSetWrite.descriptorType = param->mDescriptorType;
 				descriptorSetWrite.descriptorCount = param->mCount;
+				descriptorSetWrite.dstBinding = param->mBinding;
+
 				if (param->mDescriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) {
 					descriptorSetWrite.pBufferInfo = &param->mBuffers[i]->getBufferInfo();
 				}
@@ -47,7 +49,6 @@ namespace FF::Wrapper {
 			//¸üÐÂ
 			vkUpdateDescriptorSets(mDevice->getDevice(), static_cast<uint32_t>(descriptorSetWrites.size()), descriptorSetWrites.data(), 0, nullptr);
 		}
-
 	}
 
 	DescriptorSet::~DescriptorSet(){}

@@ -37,6 +37,9 @@ namespace FF::Wrapper {
 	public:
 		[[nodiscard]] auto getPipeline() { return mPipeline; }
 
+		//mLayout是根据mLayoutState生成的，mLayoutState里面填写的就是descriptorSetLayout
+		[[nodiscard]] auto getLayout() { return mLayout; }
+
 	private:
 		VkPipeline mPipeline{ VK_NULL_HANDLE };
 		VkPipelineLayout mLayout{ VK_NULL_HANDLE };

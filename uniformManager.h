@@ -1,6 +1,6 @@
 #pragma once
 #include"vulkanWrapper/device.h"
-
+#include "base.h"
 
 #include "vulkanWrapper/buffer.h"
 #include "vulkanWrapper/descriptorSetLayout.h"
@@ -20,13 +20,20 @@ namespace FF {
 
 		void init(const Wrapper::Device::Ptr& device, int frameCount);
 
+		//更新函数，更新mUniformParams里面的mBuffers，在本例子中，我们只更新VPMatrix和ObjectUniform这两个矩阵
+		void updata(const VPMatrix& vpMatrix, const ObjectUniform& objectUniform, const int& frameCount);
+
 		[[nodiscard]] auto getDescriptorSetLayout() const { return mDescriptorSetLayout; }
+		[[nodiscard]] auto getmDescriptorSet(int frameCount) const { return mDescriptorSet->getDescriptorSet(frameCount); }//frameCount： 要get mDescriptorSet中的哪一个
+
+		
 
 	private:
 		std::vector<Wrapper::UniformParameter::Ptr> mUniformParams{}; //所有有所关于uniform的描述信息
 
 		Wrapper::DescriptorSetLayout::Ptr mDescriptorSetLayout{ nullptr };
 		Wrapper::DescriptorPool::Ptr mDescriptorPool{ nullptr }; //用来分配descriptorSet
+		Wrapper::DescriptorSet::Ptr mDescriptorSet{ nullptr };
 	};
 
 }

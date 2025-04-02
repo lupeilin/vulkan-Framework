@@ -53,6 +53,11 @@ namespace FF::Wrapper {
 		vkCmdBindIndexBuffer(mCommandBuffer, buffer, 0, VK_INDEX_TYPE_UINT32); //indexType是说，这个index是一个int16，还是int32，还是。。。
 	}
 
+	void CommandBuffer::bindDescriptorSet(const VkPipelineLayout layout, const VkDescriptorSet &descriptorSet) {
+		//VkPipelineBindPoint: graphic or compute;  
+		vkCmdBindDescriptorSets(mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptorSet, 0, nullptr);
+	}
+
 	void CommandBuffer::bindGraphicPipeline(const VkPipeline& pipeline) { //为本次渲染绑定一个pipeline
 		vkCmdBindPipeline(mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 	}

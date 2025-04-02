@@ -213,6 +213,8 @@ namespace FF {
 
 			mCommandBuffers[i]->bindGraphicPipeline(mPipeline->getPipeline());
 
+			mCommandBuffers[i]->bindDescriptorSet(mPipeline->getLayout(), mUniformManager->getmDescriptorSet(mCurrentFrame));
+
 			//mCommandBuffers[i]->bindVertexBuffer({ mModel->getVertexBuffer()->getBuffer() });
 			mCommandBuffers[i]->bindVertexBuffer({ mModel->getVertexBuffers() });
 
@@ -288,8 +290,12 @@ namespace FF {
 
 	void Application::mainLoop() {
 		while (!mWindow->shouldClose()) {
-			mWindow->pollEvents();
+			mWindow->pollEvents(); // 处理窗口事件（键盘、鼠标、窗口大小调整）
 
+			mModel->updata();
+
+			mUniformManager->updata(mVPMatrix, mModel->getUniform(), mCurrentFrame); //更新uniform
+			
 			render();
 		}
 		vkDeviceWaitIdle(mDevice->getDevice());
