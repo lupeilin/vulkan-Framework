@@ -79,8 +79,27 @@ namespace FF::Wrapper {
 		}
 	}
 	//const std::vector<VkBufferCopy>& copyInfos 这里必须用引用，因为不用引用的话，就是一个临时变量，等会就销毁了。
-	void CommandBuffer::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t copyInfoCount, const std::vector<VkBufferCopy>& copyInfos) {
+	void CommandBuffer::copyBufferToBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t copyInfoCount, const std::vector<VkBufferCopy>& copyInfos) {
 		vkCmdCopyBuffer(mCommandBuffer, srcBuffer, dstBuffer, copyInfoCount, copyInfos.data());
+	}
+
+	void CommandBuffer::copyBufferToImage(VkBuffer srcBuffer, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t width, uint32_t height) {
+		VkBufferImageCopy region{};
+		region.bufferOffset = 0;
+
+		//为0代表不需要进行padding（内存对齐）
+		region.bufferRowLength = 0;
+		region.bufferImageHeight = 0;
+
+		region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		region.imageSubresource.mipLevel = 0;//开始是0号
+		region.imageSubresource.baseArrayLayer = 0;//开始是0号
+		region.imageSubresource.layerCount = 1;
+
+		region.imageOffset = { 0,0,0 };
+		region.imageExtent = { width, height, 1 };
+
+		vkCmdCopyBufferToImage(mCommandBuffer, srcBuffer, dstImage, dstImageLayout, 1, &region);
 	}
 
 	void CommandBuffer::submitSync(VkQueue queue, VkFence fence) {
@@ -93,4 +112,20 @@ namespace FF::Wrapper {
 
 		vkQueueWaitIdle(queue);
 	}
+
+	void CommandBuffer::transferImageLayout(const VkImageMemoryBarrier &imageMemoryBarriar, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask) {
+		vkCmdPipelineBarrier(
+			mCommandBuffer,
+			srcStageMask,
+			dstStageMask,
+			0,
+			0,
+			nullptr, //memory Barriar
+			0,
+			nullptr, //buffer memory Barriar
+			1,
+			&imageMemoryBarriar //image memory Barriar
+		);
+	}
+
 }

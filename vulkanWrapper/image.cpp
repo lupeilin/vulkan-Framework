@@ -1,4 +1,6 @@
 #include "image.h"
+#include "commandBuffer.h"
+#include "buffer.h"
 
 namespace FF::Wrapper {
 	Image::Image(const Device::Ptr& device,
@@ -13,6 +15,9 @@ namespace FF::Wrapper {
 		const VkImageAspectFlags& aspectFlags //view
 	) {
 		mDevice = device;
+		mlayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		mWidth = width;
+		mHeight = height;
 
 		VkImageCreateInfo imageCreateInfo{};
 		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -96,5 +101,76 @@ namespace FF::Wrapper {
 		}
 
 		throw std::runtime_error("Error : failed to find the property memory type!");
+	}
+
+	//此处属于一个便捷的写法，封装性比较好，但是可以独立作为一个工具函数，
+	// 写到Tool的类里面
+	void Image::setImageLayout(
+		VkImageLayout newLayout,
+		VkPipelineStageFlags srcStageMask,
+		VkPipelineStageFlags dstStageMask,
+		VkImageSubresourceRange subresouceRange,  //和VkImageView很像
+		const CommandPool::Ptr& commandPool
+	) {
+		VkImageMemoryBarrier imageMemoryBarrier{};
+		imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		imageMemoryBarrier.oldLayout = mlayout;
+		imageMemoryBarrier.newLayout = newLayout;
+		imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;//转换这张图片关于队列的所有权
+		imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		imageMemoryBarrier.image = mImage;
+		imageMemoryBarrier.subresourceRange = subresouceRange;
+
+		switch (mlayout)
+		{
+			//如果是无定义layout，说明图片刚被创建，上方一定没有任何操作，所以上方是一个虚拟的依赖
+			//所以不关心上一个阶段的任何操作
+		case VK_IMAGE_LAYOUT_UNDEFINED:
+			imageMemoryBarrier.srcAccessMask = 0; //0指的是不关心
+		case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+			imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT; //oldlayout因为是一个dst，所以要等待写入完成
+		default:
+			break;
+		}
+
+		switch (newLayout)
+		{
+			//如果目标是，将图片转换成为一个复制操作的目标图片/内存，那么被阻塞的操作一定是一个写入操作
+		case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+			imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			//如果目标是，将图片转换成为一个适合作为纹理的格式，那么被阻塞的操作一定是，读取  
+		case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+			imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		default:
+			break;
+		}
+
+		//更新layout
+		mlayout = newLayout;
+
+		//将Barrier送到队列去执行
+		auto commandBuffer = CommandBuffer::create(mDevice, commandPool);
+		//格式转换是一个一次性执行的commandBuffer，在这次操作完成之后不会继续存留
+		commandBuffer->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+		commandBuffer->transferImageLayout(imageMemoryBarrier, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+		commandBuffer->end();
+
+		commandBuffer->submitSync(mDevice->getGraphicQueue());
+	}
+
+	void Image::fillImageData(size_t size, void* pData, const CommandPool::Ptr& commandPool) {
+		assert(pData);
+		assert(size);
+
+		auto stageBuffer = Buffer::createstageBuffer(mDevice, size, pData);
+
+		//将一个buffer中的数据拷贝到image上去
+		auto commandBuffer = CommandBuffer::create(mDevice, commandPool);
+
+		commandBuffer->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+		commandBuffer->copyBufferToImage(stageBuffer->getBuffer(), mImage, mlayout, mWidth, mHeight);
+		commandBuffer->end();
+
+		commandBuffer->submitSync(mDevice->getGraphicQueue());
 	}
 }

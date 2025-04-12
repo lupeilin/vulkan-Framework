@@ -38,6 +38,19 @@ namespace FF::Wrapper {
 		return buffer;
 	}
 
+	Buffer::Ptr Buffer::createstageBuffer(const Device::Ptr& device, VkDeviceSize size, void* pData) {
+		auto buffer = Buffer::create(
+			device, size,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			//VK_MEMORY_PROPERTY_HOST_COHERENT_BIT  我们可以利用updataBufferByMap的形式对没存进行更新，更新之后能够立马显现
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+		);
+		if (pData != nullptr) {
+			buffer->updataBufferByMap(pData, size);
+		}
+		return buffer;
+	}
+
 	Buffer::Buffer(const Device::Ptr& device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
 		mDevice = device;
 
@@ -138,7 +151,7 @@ namespace FF::Wrapper {
 		VkBufferCopy copyInfo{};
 		copyInfo.size = size; 
 
-		commandBuffer->copyBuffer(srcBuufer, dstBuffer, 1, { copyInfo });
+		commandBuffer->copyBufferToBuffer(srcBuufer, dstBuffer, 1, { copyInfo });
 
 		commandBuffer->end();
 

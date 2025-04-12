@@ -16,6 +16,7 @@ namespace FF::Wrapper {
 
 		static Ptr createIndexBuffer(const Device::Ptr& device, VkDeviceSize size, void* pData);
 		static Ptr createUniformBuffer(const Device::Ptr& device, VkDeviceSize size, void* pData = nullptr);
+		static Ptr createstageBuffer(const Device::Ptr& device, VkDeviceSize size, void* pData = nullptr);
 
 	public:
 		Buffer(const Device::Ptr &device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
