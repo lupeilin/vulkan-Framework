@@ -18,7 +18,7 @@
 #include "vulkanWrapper/descriptorPool.h"
 #include "vulkanWrapper/descriptorSet.h"
 #include "vulkanWrapper/description.h"  
-//#include "vulkanWrapper/image.h"
+#include "vulkanWrapper/image.h"
 
 #include "uniformManager.h"
 
@@ -49,6 +49,8 @@ namespace FF {
 		void createSyncObject();
 		void createUniformParams();
 
+		void createTexture();
+
 		//重建交换链： 当窗口大小发生变化的时候，交换链也要发生变化，  frame  view  pipeline  renderPass  sync
 		void recreateSwapChain();
 		
@@ -77,6 +79,8 @@ namespace FF {
 
 		UniformManager::Ptr mUniformManager{ nullptr };
 
+		//图片与纹理
+		Wrapper::Image::Ptr mTexture{ nullptr };
 		 
 		Model::Ptr mModel{ nullptr };
 		VPMatrix mVPMatrix;
