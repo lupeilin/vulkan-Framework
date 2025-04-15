@@ -127,8 +127,10 @@ namespace FF::Wrapper {
 			//所以不关心上一个阶段的任何操作
 		case VK_IMAGE_LAYOUT_UNDEFINED:
 			imageMemoryBarrier.srcAccessMask = 0; //0指的是不关心
+			break;
 		case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
 			imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT; //oldlayout因为是一个dst，所以要等待写入完成
+			break;
 		default:
 			break;
 		}
@@ -138,9 +140,11 @@ namespace FF::Wrapper {
 			//如果目标是，将图片转换成为一个复制操作的目标图片/内存，那么被阻塞的操作一定是一个写入操作
 		case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
 			imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			break;
 			//如果目标是，将图片转换成为一个适合作为纹理的格式，那么被阻塞的操作一定是，读取  
 		case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
 			imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			break;
 		default:
 			break;
 		}
@@ -152,7 +156,7 @@ namespace FF::Wrapper {
 		auto commandBuffer = CommandBuffer::create(mDevice, commandPool);
 		//格式转换是一个一次性执行的commandBuffer，在这次操作完成之后不会继续存留
 		commandBuffer->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
-		commandBuffer->transferImageLayout(imageMemoryBarrier, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+		commandBuffer->transferImageLayout(imageMemoryBarrier, srcStageMask, dstStageMask);
 		commandBuffer->end();
 
 		commandBuffer->submitSync(mDevice->getGraphicQueue());

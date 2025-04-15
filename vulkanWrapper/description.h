@@ -16,6 +16,6 @@ namespace FF::Wrapper {
 		VkDescriptorType mDescriptorType; //是uniform  还是 image texture
 		VkShaderStageFlagBits mStage;
 
-		std::vector<Buffer::Ptr> mBuffers{ nullptr }; //描述信息对应的buffer
+		std::vector<Buffer::Ptr> mBuffers{}; //描述信息对应的buffer
 	};
 }

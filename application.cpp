@@ -48,6 +48,8 @@ namespace FF {
 
 		createSyncObject();
 
+		createTexture();
+
 	}
 	void Application::createPipeline() {
 		//设置视口
@@ -246,12 +248,14 @@ namespace FF {
 
 	void Application::createTexture() {
 		std::string texturePath = "assets/1.jpeg";
-		int texWidth, texHeight, texChannles;
+		int texWidth, texHeight, texSize, texChannles;
 		stbi_uc* pixels = stbi_load(texturePath.c_str(), &texWidth, &texHeight, &texChannles, STBI_rgb_alpha);
 
 		if (!pixels) {
 			throw std::runtime_error("Error : failed to read iamge data");
 		}
+
+		texSize = texWidth * texHeight * 4;
 
 		mTexture = Wrapper::Image::create(
 			mDevice, texWidth, texHeight,
@@ -264,8 +268,34 @@ namespace FF {
 			VK_IMAGE_ASPECT_COLOR_BIT
 		);
 
-		mTexture->setImageLayout()
+		VkImageSubresourceRange region{};
+		region.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		//layer
+		region.baseArrayLayer = 0;
+		region.layerCount = 1;
+		//level
+		region.baseMipLevel = 0;
+		region.levelCount = 1;
 
+		//格式转换 成为VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+		mTexture->setImageLayout(
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			VK_PIPELINE_STAGE_TRANSFER_BIT,
+			VK_PIPELINE_STAGE_TRANSFER_BIT,
+			region,
+			mCommandPool
+		);
+		
+		mTexture->fillImageData(texSize, (void*)pixels, mCommandPool);
+
+		//格式转换 成为VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		mTexture->setImageLayout(
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			VK_PIPELINE_STAGE_TRANSFER_BIT,
+			VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+			region,
+			mCommandPool
+		);
 	}
 
 	void Application::recreateSwapChain() {
