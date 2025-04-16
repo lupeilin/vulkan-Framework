@@ -71,7 +71,8 @@ namespace FF::Wrapper {
 		vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
 		return deviceProp.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
-			deviceFeatures.geometryShader;
+			deviceFeatures.geometryShader &&
+			deviceFeatures.samplerAnisotropy; //支持各向异性
 	}
 	void Device::initQueueFamilies(VkPhysicalDevice device) {
 		uint32_t queueFamelyCount = 0;
@@ -120,6 +121,7 @@ namespace FF::Wrapper {
 
 		//填写逻辑设备创建信息
 		VkPhysicalDeviceFeatures  deviceFeatures = {};
+		deviceFeatures.samplerAnisotropy = VK_TRUE;
 
 		VkDeviceCreateInfo deviceCreateInfo = {};
 		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;

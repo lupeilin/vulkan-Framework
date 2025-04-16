@@ -19,6 +19,9 @@
 #include "vulkanWrapper/descriptorSet.h"
 #include "vulkanWrapper/description.h"  
 #include "vulkanWrapper/image.h"
+#include "vulkanWrapper/sampler.h"
+
+#include "texture/texture.h"
 
 #include "uniformManager.h"
 
@@ -79,8 +82,7 @@ namespace FF {
 
 		UniformManager::Ptr mUniformManager{ nullptr };
 
-		//Õº∆¨”ÎŒ∆¿Ì
-		Wrapper::Image::Ptr mTexture{ nullptr };
+	
 		 
 		Model::Ptr mModel{ nullptr };
 		VPMatrix mVPMatrix;

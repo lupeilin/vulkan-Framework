@@ -57,6 +57,12 @@ namespace FF::Wrapper {
 
 		void fillImageData(size_t size, void* pData, const CommandPool::Ptr& commandPool); //已经读入一张图片，怎么传入
 
+		[[nodiscard]] auto getImage() const { return mImage; }
+		[[nodiscard]] auto getLayout() const { return mlayout; }
+		[[nodiscard]] auto getWidth() const { return mWidth; }
+		[[nodiscard]] auto getHeight() const { return mHeight; }
+		[[nodiscard]] auto getImageView() const { return mImageView; }
+
 	private:
 		uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 

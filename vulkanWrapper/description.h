@@ -1,5 +1,6 @@
 #pragma once
 #include "buffer.h"
+#include "../texture/texture.h"
  
 namespace FF::Wrapper {
 	//我们需要知道，布局当中，到底有那些uniform，每一个多大，如何binding，每一个是什么类型
@@ -17,5 +18,6 @@ namespace FF::Wrapper {
 		VkShaderStageFlagBits mStage;
 
 		std::vector<Buffer::Ptr> mBuffers{}; //描述信息对应的buffer
+		Texture::Ptr mTexture{ nullptr };
 	};
 }
