@@ -1,5 +1,5 @@
 #include"application.h"
-
+#include "vulkanWrapper/image.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 namespace FF {
@@ -19,14 +19,15 @@ namespace FF {
 		mInstance = Wrapper::Instance::create(true);
 		mSurface = Wrapper::WindowSurface::create(mInstance, mWindow);
 		mDevice = Wrapper::Device::create(mInstance, mSurface);
-		mSwapChain = Wrapper::SwapChain::create(mDevice, mWindow, mSurface);
+
+		mCommandPool = Wrapper::CommandPool::create(mDevice);
+
+		mSwapChain = Wrapper::SwapChain::create(mDevice, mWindow, mSurface, mCommandPool);
 
 		mRenderPass = Wrapper::RenderPass::create(mDevice);
 		createRenderPass();
 
 		mSwapChain->createFrameBuffers(mRenderPass);
-
-		mCommandPool = Wrapper::CommandPool::create(mDevice);
 
 		mWidth = mSwapChain->getExtent().width;
 		mHeight = mSwapChain->getExtent().height;
@@ -113,6 +114,9 @@ namespace FF {
 		mPipeline->mSampleState.alphaToOneEnable = VK_FALSE;
 
 		//TODO:深度与模板测试
+		mPipeline->mDepthStencilState.depthTestEnable = VK_TRUE;
+		mPipeline->mDepthStencilState.depthWriteEnable = VK_TRUE;
+		mPipeline->mDepthStencilState.depthCompareOp = VK_COMPARE_OP_LESS;
 
 		//颜色混合
 		//这个是颜色混合掩码，得到的混合结果，按照通道与掩码进行and操作，输出
@@ -162,22 +166,39 @@ namespace FF {
 		attachmentDes.format = mSwapChain->getFormat();
 		attachmentDes.samples = VK_SAMPLE_COUNT_1_BIT;
 		attachmentDes.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;//加载图片进来的时候，把画布给到renderpass ，画布上原来的数据保留或者不保留
-		attachmentDes.storeOp = VK_ATTACHMENT_STORE_OP_STORE;//输出
+		attachmentDes.storeOp = VK_ATTACHMENT_STORE_OP_STORE;//输出，因为renderPass的输出需要用来显示
 		attachmentDes.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		attachmentDes.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		attachmentDes.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		attachmentDes.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
 		mRenderPass->addAttchment(attachmentDes);
+
+		//深度缓存attachment
+		VkAttachmentDescription depthattachmentDes{};
+		depthattachmentDes.format = Wrapper::Image::finddepthFormat(mDevice);
+		depthattachmentDes.samples = VK_SAMPLE_COUNT_1_BIT;
+		depthattachmentDes.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;//加载图片进来的时候，把画布给到renderpass ，画布上原来的数据保留或者不保留
+		//不需要像前面的colorAttanchment那样保存，因为renderpass结束之后就不需要深度值了，已经吧fragment输出到图片上了
+		depthattachmentDes.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthattachmentDes.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depthattachmentDes.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthattachmentDes.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		depthattachmentDes.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		mRenderPass->addAttchment(depthattachmentDes);
 
 		//对于画布的索引设置，以及格式要求
 		VkAttachmentReference attachmentRef{};
 		attachmentRef.attachment = 0;
 		attachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentReference depthAttachmentRef{};
+		depthAttachmentRef.attachment = 1;
+		depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		
 		//创建子流程
 		Wrapper::SubPass subPass{};
 		subPass.addColorAttachmentRefrence(attachmentRef);
+		subPass.addDepthStencilAttachmentRefrence(depthAttachmentRef);
 		subPass.buildSubpassDescription();
 
 		mRenderPass->addSubPass(subPass);
@@ -210,9 +231,16 @@ namespace FF {
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
 			renderPassBeginInfo.renderArea.extent = mSwapChain->getExtent();
 
-			VkClearValue  clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
-			renderPassBeginInfo.clearValueCount = 1;
-			renderPassBeginInfo.pClearValues = &clearColor;
+			std::vector<VkClearValue> clearColors{};
+			VkClearValue clearColor{};
+			clearColor.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+			VkClearValue depthClearColor{};
+			depthClearColor.depthStencil = { 1.0f, 0};
+			clearColors.push_back(clearColor);
+			clearColors.push_back(depthClearColor);
+
+			renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearColors.size());
+			renderPassBeginInfo.pClearValues = clearColors.data();
 
 			mCommandBuffers[i]->beginRenderPass(renderPassBeginInfo);
 
@@ -263,7 +291,7 @@ namespace FF {
 		cleanUpSwapChain();
 
 		//重建
-		mSwapChain = Wrapper::SwapChain::create(mDevice, mWindow, mSurface);
+		mSwapChain = Wrapper::SwapChain::create(mDevice, mWindow, mSurface, mCommandPool);
 		mWidth = mSwapChain->getExtent().width;
 		mHeight = mSwapChain->getExtent().height;
 

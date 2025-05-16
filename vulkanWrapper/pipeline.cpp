@@ -72,10 +72,10 @@ namespace FF::Wrapper {
 		pipelineCreateInfo.pViewportState = &mViewortState;
 		pipelineCreateInfo.pRasterizationState = &mRasterstate;
 		pipelineCreateInfo.pMultisampleState = &mSampleState;
-		pipelineCreateInfo.pDepthStencilState = nullptr; //TODO
+		pipelineCreateInfo.pDepthStencilState = &mDepthStencilState; //TODO
 		pipelineCreateInfo.pColorBlendState = &mBlendState;
 		pipelineCreateInfo.layout = mLayout;
-		pipelineCreateInfo.renderPass = mRenderPass->getRenderPass() ; // TODO: add render pass
+		pipelineCreateInfo.renderPass = mRenderPass->getRenderPass() ; 
 		pipelineCreateInfo.subpass = 0; //这个pipeline是用于前一行这个renderpass的第0号subpass来渲染的
 
 		//以存在的pipeline为基础进行创建，会更快，但是需要指定flags为 VK_PIPELINE_CREATE_DERIVATIVE_BIT

@@ -37,8 +37,18 @@ namespace FF {
 			0.5f, 0.0f, 0.0f,
 			-0.5f, 0.0f, 0.0f,
 			0.0f, -0.5f, 0.0f,
+
+			0.3f, 0.5f, 0.2f,
+			1.8f, 0.0f, 0.2f,
+			-0.8f, 0.0f, 0.2f,
+			0.3f, -0.5f, 0.2f,
 			};
 			mColors = {
+			1.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f,
+			0.0f, 0.0f, 1.0f,
+			1.0f, 0.0f, 0.0f,
+
 			1.0f, 0.0f, 0.0f,
 			0.0f, 1.0f, 0.0f,
 			0.0f, 0.0f, 1.0f,
@@ -48,11 +58,16 @@ namespace FF {
 				0.0f, 1.0f,
 				0.0f, 0.0f,
 				1.0f, 1.0f,
+				1.0f, 0.0f,
+
+				0.0f, 1.0f,
+				0.0f, 0.0f,
+				1.0f, 1.0f,
 				1.0f, 0.0f
 			};
 
 			//因为设置了  mPipeline->mRasterstate.frontFace = VK_FRONT_FACE_CLOCKWISE; // 顺时针为正面
-			mIndexDatas = { 0, 2, 1, 1, 2, 3 };
+			mIndexDatas = { 0, 2, 1, 1, 2, 3, 4, 6, 5, 5, 6, 7 };
 
 			//mVertexBuffer = Wrapper::Buffer::createVertexBuffer(device, mDatas.size() * sizeof(Vertex), mDatas.data());
 			mPositionBuffer = Wrapper::Buffer::createVertexBuffer(device, mPositions.size() * sizeof(Vertex), mPositions.data());

@@ -15,6 +15,15 @@ namespace FF::Wrapper {
 	{
 	public:
 		using Ptr = std::shared_ptr<Image>;
+
+		//工具函数：静态
+		static Image::Ptr createDepthImage(
+			const Device::Ptr& device, 
+			const int& width,
+			const int& height			
+			);
+
+	public:
 		static Ptr create(const Device::Ptr& device,
 			const int& width,
 			const int& height,
@@ -57,6 +66,18 @@ namespace FF::Wrapper {
 
 		void fillImageData(size_t size, void* pData, const CommandPool::Ptr& commandPool); //已经读入一张图片，怎么传入
 
+		static VkFormat finddepthFormat(const Device::Ptr& device);
+
+		//用来查询深度缓存image的格式
+		static VkFormat findSupportedFormat(
+			const Device::Ptr& device,
+			const std::vector<VkFormat>& candidates,
+			VkImageTiling tiling,
+			VkFormatFeatureFlags features);
+
+		//我们的format是否有stencil的成分
+		bool hasStencilComponent();
+
 		[[nodiscard]] auto getImage() const { return mImage; }
 		[[nodiscard]] auto getLayout() const { return mlayout; }
 		[[nodiscard]] auto getWidth() const { return mWidth; }
@@ -65,6 +86,8 @@ namespace FF::Wrapper {
 
 	private:
 		uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
+		
 
 	private:
 
@@ -75,6 +98,7 @@ namespace FF::Wrapper {
 		VkImage			mImage{ VK_NULL_HANDLE };
 		VkDeviceMemory  mImageMemory{ VK_NULL_HANDLE };
 		VkImageView		mImageView{ VK_NULL_HANDLE };
+		VkFormat		mFormat{ VK_FORMAT_UNDEFINED };
 
 		VkImageLayout	mlayout{ VK_IMAGE_LAYOUT_UNDEFINED };
 	};

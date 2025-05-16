@@ -4,6 +4,8 @@
 #include"window.h"
 #include"windowSurface.h"
 #include "renderPass.h"
+#include "image.h"
+#include "commandPoll.h"
 namespace FF::Wrapper {
 
 	struct SwapChainSupportInfo
@@ -17,9 +19,16 @@ namespace FF::Wrapper {
 	{
 	public:
 		using Ptr = std::shared_ptr<SwapChain>;
-		static Ptr create(Device::Ptr device, Window::Ptr window, WindowSurface::Ptr surface) { return std::make_shared<SwapChain>(device, window, surface); }
+		static Ptr create(Device::Ptr& device, Window::Ptr& window, WindowSurface::Ptr& surface, CommandPool::Ptr& commandPool) {
+			return std::make_shared<SwapChain>(device, window, surface, commandPool);
+		}
 
-		SwapChain(Device::Ptr device, Window::Ptr window, WindowSurface::Ptr surface);
+		SwapChain(
+			Device::Ptr& device,
+			Window::Ptr& window, 
+			WindowSurface::Ptr& surface,
+			CommandPool::Ptr& commandPool
+			);
 		~SwapChain();
 
 		SwapChainSupportInfo querySwapChainSupportInfo();
@@ -58,6 +67,9 @@ namespace FF::Wrapper {
 
 		//交给渲染管线进行渲染的时候，需要把 ImageViews 包装成一个 FrameBuffers
 		std::vector<VkFramebuffer> mSwapChainFrameBuffers{};
+
+		//深度图片
+		std::vector<Image::Ptr> mDepthImages{};
 
 		Device::Ptr mDevice{ nullptr };
 		Window::Ptr mWindow{ nullptr };
