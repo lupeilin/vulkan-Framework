@@ -4,8 +4,10 @@
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inColor;
+layout(location = 2) in vec2 inUV;
 
 layout(location = 0) out vec3 outColor;
+layout(location = 1) out vec2 outUV;
 
 layout(binding = 0) uniform VPMatrix{
 	mat4 mViewMatrix;
@@ -24,5 +26,6 @@ void main(){
 	//gl_Position = vec4(position[gl_VertexIndex], 0.0, 1.0);
 	//vulkan最后算出来是0到1
 	gl_Position = vpUBO.mProjectMatrix * vpUBO.mViewMatrix * objectUBO.mModelMatrix * vec4(inPosition, 1.0);
+	outUV = inUV;
 	outColor = inColor;
 }

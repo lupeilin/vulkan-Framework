@@ -6,7 +6,9 @@
 namespace FF::Wrapper {
 
 	const std::vector<const char*> deviceRequiredExtensions = {
-		VK_KHR_SWAPCHAIN_EXTENSION_NAME
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+		VK_KHR_MAINTENANCE1_EXTENSION_NAME // 在vulkan中，y轴向下，openGL中y轴向上（标准的右手坐标系）
+											//第二个扩展就是将坐标系变成一个标准的右手坐标系
 	};
 
 	class Device

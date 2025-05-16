@@ -8,7 +8,9 @@ namespace FF {
 
 	UniformManager::~UniformManager() {}
 
-	void UniformManager::init(const Wrapper::Device::Ptr& device, int frameCount) {
+	void UniformManager::init(const Wrapper::Device::Ptr& device, const Wrapper::CommandPool::Ptr& commandPool, int frameCount) {
+		mDevice = device;
+
 		auto vpParam = Wrapper::UniformParameter::create();
 		vpParam->mBinding = 0;
 		vpParam->mCount = 1;
@@ -18,7 +20,7 @@ namespace FF {
 		
 		for (size_t i = 0; i < frameCount; i++)
 		{
-			auto buffer = Wrapper::Buffer::createUniformBuffer(device, vpParam->mSize, nullptr);
+			auto buffer = Wrapper::Buffer::createUniformBuffer(mDevice, vpParam->mSize, nullptr);
 			vpParam->mBuffers.push_back(buffer);
 		}
 
@@ -33,11 +35,23 @@ namespace FF {
 
 		for (size_t i = 0; i < frameCount; i++)
 		{
-			auto buffer = Wrapper::Buffer::createUniformBuffer(device, objectParam->mSize, nullptr);
+			auto buffer = Wrapper::Buffer::createUniformBuffer(mDevice, objectParam->mSize, nullptr);
 			objectParam->mBuffers.push_back(buffer);
-		}
+		} 
 
 		mUniformParams.push_back(objectParam); //所有所关于uniform的描述信息
+
+
+		auto textureParam = Wrapper::UniformParameter::create();
+		textureParam->mBinding = 2;
+		textureParam->mCount = 1;
+		textureParam->mDescriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		//textureParam->mSize = sizeof(ObjectUniform);
+		textureParam->mStage = VK_SHADER_STAGE_FRAGMENT_BIT;
+		textureParam->mTexture = Texture::create(mDevice, commandPool, "assets/1.jpeg");
+
+		mUniformParams.push_back(textureParam); 
+
 
 		mDescriptorSetLayout = Wrapper::DescriptorSetLayout::create(device);
 		mDescriptorSetLayout->build(mUniformParams);

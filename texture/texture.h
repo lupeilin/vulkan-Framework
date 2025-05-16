@@ -25,6 +25,7 @@ namespace FF {
 
 		[[discard]] auto getImage() const{ return mImage; }
 		[[discard]] auto getSampler() const { return mSampler; }
+		[[nodiscard]] VkDescriptorImageInfo& getImageInfo() { return mImageInfo; } //最后传入描述符的就是这个
 
 	private:
 		Wrapper::Device::Ptr mDevice{ nullptr };

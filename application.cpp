@@ -26,12 +26,14 @@ namespace FF {
 
 		mSwapChain->createFrameBuffers(mRenderPass);
 
+		mCommandPool = Wrapper::CommandPool::create(mDevice);
+
 		mWidth = mSwapChain->getExtent().width;
 		mHeight = mSwapChain->getExtent().height;
 
 		//descriptor============================ 
 		mUniformManager = UniformManager::create();
-		mUniformManager->init(mDevice, mSwapChain->getImageCount());
+		mUniformManager->init(mDevice, mCommandPool, mSwapChain->getImageCount());
 
 		//创建模型  之后我们就可以向pipeline提供描述信息了 
 		mModel = Model::create(mDevice);
@@ -40,24 +42,22 @@ namespace FF {
 		
 		createPipeline();
 
-		mCommandPool = Wrapper::CommandPool::create(mDevice);
-
 		mCommandBuffers.resize(mSwapChain->getImageCount());
 
 		createCommandBufers();
 
 		createSyncObject();
 
-		createTexture();
-
 	}
 	void Application::createPipeline() {
 		//设置视口
 		VkViewport viewport = {};
 		viewport.x = 0.0f;
-		viewport.y = 0.0f;
+		/*viewport.y = 0.0f;*/
+		viewport.y = (float)mHeight;
 		viewport.width = (float)mWidth;
-		viewport.height = (float)mHeight;
+		/*viewport.height = (float)mHeight;*/
+		viewport.height = -(float)mHeight;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0;
 
@@ -96,7 +96,8 @@ namespace FF {
 		mPipeline->mRasterstate.polygonMode = VK_POLYGON_MODE_FILL; //光栅化的时候如何解释这一堆图元，是fill还是line  // 其他模式需要开启gpu特性 //多边形绘制模式（填充、线框、点）
 		mPipeline->mRasterstate.lineWidth = 1.0f;//大于1需要开启gpu特性
 		mPipeline->mRasterstate.cullMode = VK_CULL_MODE_BACK_BIT; //背面剔除
-		mPipeline->mRasterstate.frontFace = VK_FRONT_FACE_CLOCKWISE; // 顺时针为正面
+		//mPipeline->mRasterstate.frontFace = VK_FRONT_FACE_CLOCKWISE; // 顺时针为正面
+		mPipeline->mRasterstate.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; // 逆时针为正面
 
 		mPipeline->mRasterstate.depthBiasEnable = VK_FALSE;//第二次渲染的深度，比真实的深度小一点，在原来的深度上设置一个贝叶斯。 
 		mPipeline->mRasterstate.depthBiasConstantFactor = 0.0f;

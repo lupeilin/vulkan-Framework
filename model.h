@@ -21,7 +21,7 @@ namespace FF {
 			//	{{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
 			//	{{-0.5f, 0.5f, 0.0f},{0.0f, 0.0f, 1.0f}}
 			//};
-			mPositions = {
+			/*mPositions = {
 			0.0f, -0.5f, 0.0f,
 			0.5f, 0.5f, 0.0f,
 			-0.5f, 0.5f, 0.0f
@@ -30,14 +30,34 @@ namespace FF {
 			1.0f, 0.0f, 0.0f,
 			0.0f, 1.0f, 0.0f,
 			0.0f, 0.0f, 1.0f
+			};*/
+
+			mPositions = {
+			0.0f, 0.5f, 0.0f,
+			0.5f, 0.0f, 0.0f,
+			-0.5f, 0.0f, 0.0f,
+			0.0f, -0.5f, 0.0f,
+			};
+			mColors = {
+			1.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f,
+			0.0f, 0.0f, 1.0f,
+			1.0f, 0.0f, 0.0f
+			};
+			mUVs = {
+				0.0f, 1.0f,
+				0.0f, 0.0f,
+				1.0f, 1.0f,
+				1.0f, 0.0f
 			};
 
 			//因为设置了  mPipeline->mRasterstate.frontFace = VK_FRONT_FACE_CLOCKWISE; // 顺时针为正面
-			mIndexDatas = { 0, 1, 2 };
+			mIndexDatas = { 0, 2, 1, 1, 2, 3 };
 
 			//mVertexBuffer = Wrapper::Buffer::createVertexBuffer(device, mDatas.size() * sizeof(Vertex), mDatas.data());
 			mPositionBuffer = Wrapper::Buffer::createVertexBuffer(device, mPositions.size() * sizeof(Vertex), mPositions.data());
 			mColorBuffer = Wrapper::Buffer::createVertexBuffer(device, mColors.size() * sizeof(Vertex), mColors.data());
+			mUVBuffer = Wrapper::Buffer::createVertexBuffer(device, mUVs.size() * sizeof(Vertex), mUVs.data());
 			mIndexBuffer = Wrapper::Buffer::createIndexBuffer(device, mIndexDatas.size() * sizeof(unsigned int), mIndexDatas.data());
 			int a = 1;
 		}
@@ -51,7 +71,7 @@ namespace FF {
 			//bingingDes[0].stride = sizeof(Vertex);
 			//bingingDes[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX; //表示逐顶点处理数据, 区别于 VK_VERTEX_INPUT_RATE_INSTANCE
 
-			bingingDes.resize(2);
+			bingingDes.resize(3);
 			bingingDes[0].binding = 0;
 			bingingDes[0].stride = sizeof(float) * 3;
 			bingingDes[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX; //表示逐顶点处理数据, 区别于 VK_VERTEX_INPUT_RATE_INSTANCE
@@ -59,13 +79,17 @@ namespace FF {
 			bingingDes[1].binding = 1;
 			bingingDes[1].stride = sizeof(float) * 3;
 			bingingDes[1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX; //表示逐顶点处理数据, 区别于 VK_VERTEX_INPUT_RATE_INSTANCE
+
+			bingingDes[2].binding = 2;
+			bingingDes[2].stride = sizeof(float) * 2;
+			bingingDes[2].inputRate = VK_VERTEX_INPUT_RATE_VERTEX; 
 			return bingingDes;
 		}
 
 		//attribute相关信息，与vertexShader里面的location相关，, 在createPipeline中调用
 		std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions() {
 			std::vector<VkVertexInputAttributeDescription> attributeDes{};
-			attributeDes.resize(2);
+			attributeDes.resize(3);
 
 			attributeDes[0].binding = 0;
 			attributeDes[0].location = 0;
@@ -80,12 +104,18 @@ namespace FF {
 			//attributeDes[1].offset = offsetof(Vertex, mColor);
 			attributeDes[1].offset = 0;
 
+			attributeDes[2].binding = 2;
+			attributeDes[2].location = 2;
+			attributeDes[2].format = VK_FORMAT_R32G32_SFLOAT;
+			//attributeDes[1].offset = offsetof(Vertex, mColor);
+			attributeDes[2].offset = 0;
+
 			return attributeDes;
 		}
 		
 		//[[nodiscard]] auto getVertexBuffer() { return mVertexBuffer; }
 		[[nodiscard]] auto getVertexBuffers() { 
-			std::vector<VkBuffer> buffers{ mPositionBuffer->getBuffer(), mColorBuffer->getBuffer()};
+			std::vector<VkBuffer> buffers{ mPositionBuffer->getBuffer(), mColorBuffer->getBuffer(), mUVBuffer->getBuffer() };
 			return buffers;
 		}
 		[[nodiscard]] auto getIndexBuffer() { return mIndexBuffer; }
@@ -108,12 +138,15 @@ namespace FF {
 		std::vector<float> mPositions{};
 		std::vector<float> mColors{};
 		std::vector<unsigned int> mIndexDatas{};
+		std::vector<float> mUVs{};
 
 		Wrapper::Device::Ptr mDevice{ nullptr };
 
 		// Wrapper::Buffer::Ptr mVertexBuffer{ nullptr };
 		Wrapper::Buffer::Ptr mPositionBuffer{ nullptr };
 		Wrapper::Buffer::Ptr mColorBuffer{ nullptr };
+		Wrapper::Buffer::Ptr mUVBuffer{ nullptr };
+
 		Wrapper::Buffer::Ptr mIndexBuffer{ nullptr };
 
 		ObjectUniform mUniform{};

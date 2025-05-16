@@ -13,23 +13,26 @@ namespace FF::Wrapper {
 
 	void DescriptorPool::build(std::vector<UniformParameter::Ptr>& params, const int& frameCount) {
 		//descriptor
-		//descriptorSet(descriptorA£¨buffer£©, descriptorA£¨buffer£©, descriptorB£¨buffer£©)
-		//descriptorSet * N ÒòÎªÃèÊö·û¼¯ºÏµ±ÖĞ£¬°ó¶¨ÁËbuffer,µ±Ç°Ò»Ö¡Ìá½»µÄÊ±ºò£¬ÆäËûµÄÖ¡ÕıÔÚ»æÖÆµ±ÖĞ£¬
-			//¼´£¬uniformBuffer, ¿ÉÄÜÕıÔÚ±»ĞŞ¸Ä£¬´ËÊ±cpu¶ËµÄÏÂÒ»¸öÑ­»·£¬È´¶ÔÆä½øĞĞÁËÊı¾İµÄĞŞ¸Ä  
-			//ËùÒÔĞèÒªÎªÃ¿Ò»Ö¡´´½¨Ò»¸ödescriptorSet(descriptorA£¨buffer£©, descriptorA£¨buffer£©, descriptorB£¨buffer)
+		//descriptorSet(descriptorAï¼ˆbufferï¼‰, descriptorAï¼ˆbufferï¼‰, descriptorBï¼ˆbufferï¼‰)
+		//descriptorSet * N å› ä¸ºæè¿°ç¬¦é›†åˆå½“ä¸­ï¼Œç»‘å®šäº†buffer,å½“å‰ä¸€å¸§æäº¤çš„æ—¶å€™ï¼Œå…¶ä»–çš„å¸§æ­£åœ¨ç»˜åˆ¶å½“ä¸­ï¼Œ
+			//å³ï¼ŒuniformBuffer, å¯èƒ½æ­£åœ¨è¢«ä¿®æ”¹ï¼Œæ­¤æ—¶cpuç«¯çš„ä¸‹ä¸€ä¸ªå¾ªç¯ï¼Œå´å¯¹å…¶è¿›è¡Œäº†æ•°æ®çš„ä¿®æ”¹  
+			//æ‰€ä»¥éœ€è¦ä¸ºæ¯ä¸€å¸§åˆ›å»ºä¸€ä¸ªdescriptorSet(descriptorAï¼ˆbufferï¼‰, descriptorAï¼ˆbufferï¼‰, descriptorBï¼ˆbuffer)
 
-		//Í³¼ÆĞÅÏ¢£¬Í³¼ÆÃ¿Ò»ÖÖuniformÓĞ¶àÉÙ¸ö
+		//ç»Ÿè®¡ä¿¡æ¯ï¼Œç»Ÿè®¡æ¯ä¸€ç§uniformæœ‰å¤šå°‘ä¸ª
 		int uniformBufferCount = 0; 
-		//TODO:ÎÆÀíÕâÖÖÖÖÀàµÄuniformÓĞ¶àÉÙ¸ö£¿
+		//TODO:çº¹ç†è¿™ç§ç§ç±»çš„uniformæœ‰å¤šå°‘ä¸ªï¼Ÿ
+		int textureCount = 0;
 
 		for (const auto& param : params) {
 			if (param->mDescriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) {
 				uniformBufferCount++;
 			} 
-			//TODO
+			if (param->mDescriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) {
+				textureCount++;
+			}
 		}
 
-		//ÃèÊöÃ¿Ò»ÖÖuniform¶¼ÓĞ¶àÉÙ¸ö
+		//æè¿°æ¯ä¸€ç§uniforméƒ½æœ‰å¤šå°‘ä¸ª
 		std::vector<VkDescriptorPoolSize> poolSize{};
 
 		VkDescriptorPoolSize uniformBufferSize{};
@@ -37,7 +40,13 @@ namespace FF::Wrapper {
 		uniformBufferSize.descriptorCount = uniformBufferCount * frameCount;
 		poolSize.push_back(uniformBufferSize);
 
-		//´´½¨pool
+		VkDescriptorPoolSize textureSize{};
+		textureSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		textureSize.descriptorCount = textureCount * frameCount;    //è¿™è¾¹çš„sizeå€¼å¾—æ˜¯æœ‰å¤šå°‘ä¸ªæè¿°ç¬¦ï¼Œ
+																	//è™½ç„¶textureåªæœ‰ä¸€ä¸ªï¼Œä½†æ˜¯æè¿°ç¬¦è¦æ¯ä¸€å¸§éƒ½æœ‰ä¸€ä¸ªdescriptorSet
+		poolSize.push_back(textureSize);
+
+		//åˆ›å»ºpool
 		VkDescriptorPoolCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		createInfo.poolSizeCount = static_cast<uint32_t>(poolSize.size());

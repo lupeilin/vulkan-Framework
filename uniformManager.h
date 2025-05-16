@@ -7,6 +7,7 @@
 #include "vulkanWrapper/descriptorPool.h"
 #include "vulkanWrapper/descriptorSet.h"
 #include "vulkanWrapper/description.h"
+#include "vulkanWrapper/commandPoll.h"
 
 namespace FF {
 	class UniformManager
@@ -18,7 +19,7 @@ namespace FF {
 
 		~UniformManager();
 
-		void init(const Wrapper::Device::Ptr& device, int frameCount);
+		void init(const Wrapper::Device::Ptr& device, const Wrapper::CommandPool::Ptr& commandPool, int frameCount);
 
 		//更新函数，更新mUniformParams里面的mBuffers，在本例子中，我们只更新VPMatrix和ObjectUniform这两个矩阵
 		void updata(const VPMatrix& vpMatrix, const ObjectUniform& objectUniform, const int& frameCount);
@@ -29,6 +30,7 @@ namespace FF {
 		
 
 	private:
+		Wrapper::Device::Ptr mDevice{ nullptr };
 		std::vector<Wrapper::UniformParameter::Ptr> mUniformParams{}; //所有有所关于uniform的描述信息
 
 		Wrapper::DescriptorSetLayout::Ptr mDescriptorSetLayout{ nullptr };
