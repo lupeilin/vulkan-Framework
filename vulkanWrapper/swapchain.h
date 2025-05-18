@@ -15,6 +15,9 @@ namespace FF::Wrapper {
 		std::vector<VkPresentModeKHR> mPresentModes;
 	};
 
+	//创建一张mutisample的图片，并且加到framebuffer里面
+
+
 	class SwapChain
 	{
 	public:
@@ -70,6 +73,9 @@ namespace FF::Wrapper {
 
 		//深度图片
 		std::vector<Image::Ptr> mDepthImages{};
+
+		//多重采样，中间图片
+		std::vector<Image::Ptr> mMutiSampleImages{};
 
 		Device::Ptr mDevice{ nullptr };
 		Window::Ptr mWindow{ nullptr };

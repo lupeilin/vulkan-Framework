@@ -20,6 +20,10 @@ namespace FF::Wrapper {
 		mDepthStencilAttachmentRefrence = ref;
 	}
 
+	void SubPass::setResolvedAttachmentRefrence(const VkAttachmentReference& ref) {
+		mResolvedAttachmentRefrence = ref;
+	}
+
 	void SubPass::buildSubpassDescription() {
 		if (mColorAttachmentRefrences.empty()) {
 			throw std::runtime_error("Error : color attachment group is empty");
@@ -31,6 +35,8 @@ namespace FF::Wrapper {
 
 		mSubPassDescription.inputAttachmentCount = static_cast<uint32_t>(mInputAttachmentRefrences.size());
 		mSubPassDescription.pInputAttachments = mInputAttachmentRefrences.data();
+
+		mSubPassDescription.pResolveAttachments = &mResolvedAttachmentRefrence;
 
 		mSubPassDescription.pDepthStencilAttachment = mDepthStencilAttachmentRefrence.layout == VK_IMAGE_LAYOUT_UNDEFINED ? nullptr : &mDepthStencilAttachmentRefrence;
 	}

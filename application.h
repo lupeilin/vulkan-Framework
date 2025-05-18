@@ -22,8 +22,8 @@
 #include "vulkanWrapper/sampler.h"
 
 #include "texture/texture.h"
-
 #include "uniformManager.h"
+#include "camera.h"
 
 #include "model.h"
 namespace FF {
@@ -32,8 +32,15 @@ namespace FF {
 	{
 	public:
 		Application() = default;
+
 		~Application() = default;
+
 		void run();
+
+		void onMouseMove(double xpos, double ypos);
+
+		void onKeyDown (CAMERA_MOVE moveDire);
+
 	private:
 		void initWindow();
 

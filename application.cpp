@@ -107,7 +107,7 @@ namespace FF {
 
 		//TODO:多重采样
 		mPipeline->mSampleState.sampleShadingEnable = VK_FALSE;
-		mPipeline->mSampleState.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+		mPipeline->mSampleState.rasterizationSamples = mDevice->getMaxUsableSampleCount();
 		mPipeline->mSampleState.minSampleShading = 1.0; 
 		mPipeline->mSampleState.pSampleMask = nullptr;
 		mPipeline->mSampleState.alphaToCoverageEnable = VK_FALSE;
@@ -161,22 +161,36 @@ namespace FF {
 	}
 
 	void Application::createRenderPass() {
-		//输入画布的描述
-		VkAttachmentDescription attachmentDes{};
-		attachmentDes.format = mSwapChain->getFormat();
-		attachmentDes.samples = VK_SAMPLE_COUNT_1_BIT;
-		attachmentDes.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;//加载图片进来的时候，把画布给到renderpass ，画布上原来的数据保留或者不保留
-		attachmentDes.storeOp = VK_ATTACHMENT_STORE_OP_STORE;//输出，因为renderPass的输出需要用来显示
-		attachmentDes.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		attachmentDes.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		attachmentDes.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		attachmentDes.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-		mRenderPass->addAttchment(attachmentDes);
 
-		//深度缓存attachment
+		//0：最终输出图片  1：resolve图片（Mutisample） 2：depth图片
+		//输入画布的描述 0号位，最终输出  是swapchain原来那张图片，是resolved的目标点，即需要设置到subpass的resolved当中
+		VkAttachmentDescription finalAttachmentDes{};
+		finalAttachmentDes.format = mSwapChain->getFormat();
+		finalAttachmentDes.samples = VK_SAMPLE_COUNT_1_BIT;
+		finalAttachmentDes.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;//加载图片进来的时候，把画布给到renderpass ，画布上原来的数据保留或者不保留
+		finalAttachmentDes.storeOp = VK_ATTACHMENT_STORE_OP_STORE;//输出，因为renderPass的输出需要用来显示
+		finalAttachmentDes.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		finalAttachmentDes.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		finalAttachmentDes.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;   
+		finalAttachmentDes.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		mRenderPass->addAttchment(finalAttachmentDes);
+
+		//1号位： 被resolved图片，即被多重采样的源头图片，也即颜色输出的目标图片
+		VkAttachmentDescription mutiAttachmentDes{};
+		mutiAttachmentDes.format = mSwapChain->getFormat();
+		mutiAttachmentDes.samples = mDevice->getMaxUsableSampleCount();
+		mutiAttachmentDes.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;//加载图片进来的时候，把画布给到renderpass ，画布上原来的数据保留或者不保留
+		mutiAttachmentDes.storeOp = VK_ATTACHMENT_STORE_OP_STORE;//输出，因为renderPass的输出需要用来显示
+		mutiAttachmentDes.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		mutiAttachmentDes.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		mutiAttachmentDes.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		mutiAttachmentDes.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		mRenderPass->addAttchment(mutiAttachmentDes);
+
+		//深度缓存attachment 2号位：depth
 		VkAttachmentDescription depthattachmentDes{};
 		depthattachmentDes.format = Wrapper::Image::finddepthFormat(mDevice);
-		depthattachmentDes.samples = VK_SAMPLE_COUNT_1_BIT;
+		depthattachmentDes.samples = mDevice->getMaxUsableSampleCount();
 		depthattachmentDes.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;//加载图片进来的时候，把画布给到renderpass ，画布上原来的数据保留或者不保留
 		//不需要像前面的colorAttanchment那样保存，因为renderpass结束之后就不需要深度值了，已经吧fragment输出到图片上了
 		depthattachmentDes.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -187,18 +201,23 @@ namespace FF {
 		mRenderPass->addAttchment(depthattachmentDes);
 
 		//对于画布的索引设置，以及格式要求
-		VkAttachmentReference attachmentRef{};
-		attachmentRef.attachment = 0;
-		attachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		VkAttachmentReference finalAttachmentRef{};
+		finalAttachmentRef.attachment = 0;
+		finalAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentReference mutiAttachmentRef{};
+		mutiAttachmentRef.attachment = 1;
+		mutiAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 		VkAttachmentReference depthAttachmentRef{};
-		depthAttachmentRef.attachment = 1;
+		depthAttachmentRef.attachment = 2;
 		depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		
 		//创建子流程
 		Wrapper::SubPass subPass{};
-		subPass.addColorAttachmentRefrence(attachmentRef);
+		subPass.addColorAttachmentRefrence(mutiAttachmentRef);
 		subPass.addDepthStencilAttachmentRefrence(depthAttachmentRef);
+		subPass.setResolvedAttachmentRefrence(finalAttachmentRef);
 		subPass.buildSubpassDescription();
 
 		mRenderPass->addSubPass(subPass);
@@ -231,12 +250,19 @@ namespace FF {
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
 			renderPassBeginInfo.renderArea.extent = mSwapChain->getExtent();
 
+			//0:FINAL 1:muti 2:depth
 			std::vector<VkClearValue> clearColors{};
-			VkClearValue clearColor{};
-			clearColor.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+			VkClearValue finalClearColor{};
+			finalClearColor.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+			clearColors.push_back(finalClearColor);
+
+			VkClearValue MutiClearColor{};
+			MutiClearColor.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+			clearColors.push_back(MutiClearColor);
+
 			VkClearValue depthClearColor{};
 			depthClearColor.depthStencil = { 1.0f, 0};
-			clearColors.push_back(clearColor);
+
 			clearColors.push_back(depthClearColor);
 
 			renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearColors.size());

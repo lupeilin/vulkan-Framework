@@ -20,8 +20,18 @@ namespace FF::Wrapper {
 		static Image::Ptr createDepthImage(
 			const Device::Ptr& device, 
 			const int& width,
-			const int& height			
+			const int& height,
+			VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT
 			);
+
+		//创建一个超采样的图片，然后resolve到交换链的图片上面去，是为了抗锯齿
+		static Image::Ptr createRenderTargetImage(
+			const Device::Ptr& device,
+			const int& width,
+			const int& height,
+			const VkFormat& format
+
+		);
 
 	public:
 		static Ptr create(const Device::Ptr& device,

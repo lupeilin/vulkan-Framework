@@ -6,7 +6,8 @@ namespace FF::Wrapper {
 	Image::Ptr Image::createDepthImage(
 		const Device::Ptr& device,
 		const int& width,
-		const int& height
+		const int& height,
+		VkSampleCountFlagBits samples
 	) {
 		std::vector<VkFormat> formats = {
 			VK_FORMAT_D32_SFLOAT,
@@ -18,11 +19,31 @@ namespace FF::Wrapper {
 		return Image::create(device, width, height, depthFormat, VK_IMAGE_TYPE_2D,
 			VK_IMAGE_TILING_OPTIMAL,
 			VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-			VK_SAMPLE_COUNT_1_BIT,
+			samples,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 			VK_IMAGE_ASPECT_DEPTH_BIT);
 
 	}
+
+	Image::Ptr Image::createRenderTargetImage(
+		const Device::Ptr& device,
+		const int& width,
+		const int& height,
+		const VkFormat& format
+	) {
+		return Image::create(device, width, height, format, VK_IMAGE_TYPE_2D,
+			VK_IMAGE_TILING_OPTIMAL,
+			//VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT ，当图片拥有这个标识的时候，只有真正使用到本图片的时候
+			// 才会分配内存空间，显式的调用内存生成，是会lazy的，
+			//所以，一旦设置了transient，就必须再内存生成的时候，设置为VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT
+			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+			device->getMaxUsableSampleCount(),
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, //VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, //如果是cpu可见的内存，必须设置为coherent
+			//注意，如果前面用了VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT，这里设置成设置为VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT
+			VK_IMAGE_ASPECT_COLOR_BIT
+		);
+	}
+
 	Image::Image(const Device::Ptr& device,
 		const int& width,
 		const int& height,
@@ -204,6 +225,10 @@ namespace FF::Wrapper {
 			break;
 		case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
 			imageMemoryBarrier.dstAccessMask =  VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			break;
+
+		case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+			imageMemoryBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 			break;
 		default:
 			break;

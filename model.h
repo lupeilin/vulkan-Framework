@@ -145,7 +145,7 @@ namespace FF {
 			glm::mat4 rotateMatrix = glm::mat4(1.0f);
 			rotateMatrix = glm::rotate(rotateMatrix, glm::radians(mAngle), glm::vec3(0.0f, 0.0f, 1.0f));//ÈÆ×ÅzÖá×ª
 			mUniform.mModelMatrix = rotateMatrix;
-			mAngle += 0.02f;
+			mAngle += 0.005f;
 		}
 
 	private:

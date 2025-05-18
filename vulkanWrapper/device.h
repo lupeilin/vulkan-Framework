@@ -32,6 +32,8 @@ namespace FF::Wrapper {
 
 		bool isQueueFamilyComplete();
 
+		VkSampleCountFlagBits getMaxUsableSampleCount();
+
 		[[nodiscard]] auto getDevice() const { return mDvice; }
 		[[nodiscard]] auto getPhysicalDevice() const { return mPhysicalDevice; }
 
@@ -53,5 +55,8 @@ namespace FF::Wrapper {
 
 		//逻辑设备
 		VkDevice mDvice{ VK_NULL_HANDLE };
+
+		//抗锯齿系数
+		VkSampleCountFlagBits mSampleCounts{ VK_SAMPLE_COUNT_1_BIT }; //默认VK_SAMPLE_COUNT_1_BIT，也就是说不抗锯齿
 	};
 }

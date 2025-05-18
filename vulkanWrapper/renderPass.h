@@ -26,6 +26,8 @@ namespace FF::Wrapper {
 
 		void addDepthStencilAttachmentRefrence(const VkAttachmentReference& ref);
 
+		void setResolvedAttachmentRefrence(const VkAttachmentReference& ref);
+
 		void buildSubpassDescription();
 
 		[[nodiscard]] auto getSubPassDescription() const { return mSubPassDescription; }
@@ -35,6 +37,7 @@ namespace FF::Wrapper {
 		std::vector<VkAttachmentReference> mColorAttachmentRefrences{};
 		std::vector<VkAttachmentReference> mInputAttachmentRefrences{};
 		VkAttachmentReference mDepthStencilAttachmentRefrence{};
+		VkAttachmentReference mResolvedAttachmentRefrence{};
 	};
 
 	class RenderPass

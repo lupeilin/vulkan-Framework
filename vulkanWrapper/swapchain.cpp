@@ -96,7 +96,11 @@ namespace FF::Wrapper {
 		for (int i = 0; i < mImageCount; i++)
 		{
 			//创建深度图像
-			mDepthImages[i] = Image::createDepthImage(mDevice, mSwapChainExtent.width, mSwapChainExtent.height); //深度图像的宽高和交换链的宽高一致
+			mDepthImages[i] = Image::createDepthImage(mDevice, 
+				mSwapChainExtent.width, 
+				mSwapChainExtent.height,
+				mDevice->getMaxUsableSampleCount()
+			); //深度图像的宽高和交换链的宽高一致
 			//设置深度图像的格式
 			mDepthImages[i]->setImageLayout(
 				VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
@@ -106,6 +110,30 @@ namespace FF::Wrapper {
 				commandPool //命令池
 				);
 		}
+
+		//创建多重采样的图像MultiSampleImages
+		mMutiSampleImages.resize(mImageCount);
+
+		VkImageSubresourceRange rangeMutiSample{};
+		rangeMutiSample.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		rangeMutiSample.baseArrayLayer = 0;
+		rangeMutiSample.layerCount = 1;
+		rangeMutiSample.baseMipLevel = 0;
+		rangeMutiSample.levelCount = 1;
+
+		for(int i = 0; i < mImageCount; i++)
+		{
+			//创建多重采样的图像
+			mMutiSampleImages[i] = Image::createRenderTargetImage(mDevice, mSwapChainExtent.width, mSwapChainExtent.height, mSwapChainFormat);
+			//格式转换
+			mMutiSampleImages[i]->setImageLayout(
+				VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+				VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+				rangeMutiSample,
+				commandPool //命令池
+			);
+		}
 		
 	}
 	void SwapChain::createFrameBuffers(RenderPass::Ptr& renderPass) {
@@ -114,7 +142,13 @@ namespace FF::Wrapper {
 		for (uint32_t i = 0; i < mImageCount; i++) {
 			//frameBuffer  里面有一帧的数据，比如有n个不同的ColorAttachment 一个DepthStencilAttachment， 
 			//这些东西的集合为一个frameBuffer，送入管线，就会线程一个gpu的集合，这个集合由上方的attachment构成
-			std::array<VkImageView, 2> attachments = { mSwapChainImageViews[i] ,mDepthImages[i]->getImageView()}; // 这里 mSwapChainImageViews[i] 的顺序要和 创建renderPass的时候的VkAttachmentDescription的顺序保持一致
+
+			// 这里 mSwapChainImageViews[i] 的顺序要和 创建renderPass的时候的VkAttachmentDescription的顺序保持一致
+			std::array<VkImageView, 3> attachments = { 
+				mSwapChainImageViews[i],
+				mMutiSampleImages[i]->getImageView(), //多重采样的图片
+				mDepthImages[i]->getImageView(),
+			}; 
 
 			VkFramebufferCreateInfo frameBufferCreateInfo{};
 			frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
